@@ -115,7 +115,7 @@ fn main() {
     App::new()
         .add_plugins(
             DefaultPlugins.set(WindowPlugin {
-                primary_window: Some(Window 
+                primary_window: Some(Window {
                     title: "Conway's Game of Life".into(),
                     resolution: (WINDOW_START_WIDTH, WINDOW_START_HEIGHT).into(),
                     ..default()
