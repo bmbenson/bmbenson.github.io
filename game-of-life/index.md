@@ -8,20 +8,19 @@ tag:
 - bevy
 ---
 
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/rust.min.js"></script>
-<script>hljs.highlightAll();</script>
-
-<h3>Rust — Conway’s Game of Life in Bevy ECS</h3>
+# Rust — Conway’s Game of Life in Bevy ECS
 
 
-<h3>Introduction</h3>
+## Introduction
 
 <p>Hey all, this is my first tutorial and medium post. I decided to share a tutorial based on some recent things I learned when working with the Bevy game engine for the Rust programming language.</p><p>For this article I wanted to focus on how we might recreate one of the oldest computer games/simulations out there, called <a href="https://en.wikipedia.org/wiki/Conway%27s_Game_of_Life">Conway’s Game of Life</a> created in 1969 by John Conway. The simulation is quite basic in that there are only four rules, but create some very interesting patterns, some only showing up/stabilizing after hundreds or thousands of iterations.</p>
-<h3>Prerequisites</h3>
+
+## Prerequisites
+
 <p>This tutorial assumes some familiarity with Rust and a working installation of git. If you aren’t read up, no worries! I have linked some resources to fill in your gaps.</p><ul><li>Installing Rust: <a href="https://www.rust-lang.org/tools/install">https://www.rust-lang.org/tools/install</a></li><li>Installing Git: <a href="https://git-scm.com/book/en/v2/Getting-Started-Installing-Git">https://git-scm.com/book/en/v2/Getting-Started-Installing-Git</a></li><li>Using Git: <a href="https://www.codecademy.com/learn/learn-git">https://www.codecademy.com/learn/learn-git</a></li></ul><p>For a Rust editor, I like VSCode these days: <a href="https://code.visualstudio.com/">https://code.visualstudio.com/</a> — we don’t cover anything VSCode specific in this tutorial, so use whatever editor suits you.</p><p>Ensure you are on the latest version of cargo and rust — to do so, execute rustup update to update your tools.</p><p>Throughout the tutorial I will be including the full main.rs file to resync. If you want to skip ahead, each section generally has a commit message you can find in <a href="https://github.com/bmbenson/bevy-game-of-life">my github repo</a> and using git you can follow along with much less typing + copy/paste.</p>
-<h3>Getting Started — Display something</h3>
+
+## Getting Started — Display something
+
 <p>In your Rust project workspace initialize the cargo and git workspace:</p>
 
 ```
@@ -52,6 +51,7 @@ bevy = "0.12.1"
 #![warn(clippy::pedantic)]
 
 use bevy::prelude::*;
+
 fn main() {
     println!("Bevy app starting!");
     App::new().run();
@@ -64,6 +64,7 @@ fn main() {
 ```rust
 //main.rs
 #![warn(clippy::pedantic)]
+
 use bevy::prelude::*;
 
 fn main() {
@@ -103,7 +104,9 @@ fn main() {
 ```
 
 <p>For this we still use the majority of the DefaultPlugins, but we override the WindowPlugin with our custom settings &amp; leave all others default. Note: The ..default() is the part that fills in the remaining elements of the struct for us with the defaults, which for Bevy are quite sane.</p><p>Execute: cargo run</p><figure><img alt="" src="https://cdn-images-1.medium.com/max/700/1*aOaXgG7NtgGXfAss9ny34A.png" /></figure><p>NICE, we have something displayed &amp; our window is titled — let’s commit for good measure!</p><pre>git commit -a -m "Window title and display functionality."</pre>
-<h3>Adding the game board</h3>
+
+## Adding the game board
+
 <p>Now that we have something displayed, let’s get a game board going.</p>
 
 ```rust
@@ -141,7 +144,8 @@ fn main() {
         .run();
 }
 ```
-<p>The window displays similar to before, but the implementation is a bit more flexible with a custom board size, so we can change it easily in the future if we want a tiny or massive board (though we’ll likely want to decouple from a fixed pixel count per square if we get too large).</p><p>To actually display something inside the window we need what Bevy calls a camera. In this case for our Game Of Life, we will be using a 2d camera. Bevy is an Entity Container System style engine, and for adding the camera we’ll add it as a system. See <a href="https://bevyengine.org/learn/book/getting-started/ecs/">here</a> for more background and details on the benefits of ECS. The major thing it brings is the ability to separate out the data representations we need for our game from the functions (systems) that use them.</p><p>To add the camera, we will need to create an initialization function that adds the one-time elements to our app, which will be the 2d camera and a background — We do this by calling .add_systems(Startup, initial_setup) during our app build.</p>
+
+<p>The window displays similar to before, but the implementation is a bit more flexible with a custom board size, so we can change it easily in the future if we want a tiny or massive board (though we’ll likely want to decouple from a fixed pixel count per square if we get too large).</p><p>To actually display something inside the window we need what Bevy calls a camera. In this case for our Game Of Life, we will be using a 2d camera. Bevy is an Entity Container System style engine, and for adding the camera we’ll add it as a system. See <a href="https://bevyengine.org/learn/book/getting-started/ecs/">here</a> for more background and details on the benefits of ECS. The major thing it brings is the ability to separate out the data representations we need for our game from the functions (systems) that use them.</p><p>To add the camera, we will need to create an initialization function that adds the one-time elements to our app, which will be the 2d camera and a background — We do this by calling `.add_systems(Startup, initial_setup)` during our app build.</p>
 
 ```rust
 //main.rs
@@ -203,14 +207,27 @@ fn initial_setup(mut commands: Commands) {
         ..default()
     });
 ```
-<p>For this we’re enqueuing a spawn of a <a href="https://docs.rs/bevy/latest/bevy/prelude/struct.NodeBundle.html">NodeBundle</a> to also be added to the scene. We tell it where to place the element as well as how large it should be in relation to the parent element. If we were to change the Val::Percent to other values, we will see the BG area shrink.</p><figure><img alt="" src="https://cdn-images-1.medium.com/max/1024/1*kWdCIYfDZ2W_abcRZPSEvQ.png" /></figure><p>Execute: cargo run</p><figure><img alt="" src="https://cdn-images-1.medium.com/max/800/1*92p57fy-hs96-nHTcSvKUg.png" /></figure><p>That’s… a lot of blue.</p><pre>git commit -a -m "Add camera and background on startup."</pre><p>Okay, great, we now have a background! Let’s actually draw some board elements.</p><p>For this, we will use bevy’s built in grid system… to know how many rows and columns we’ll need to add access to the board struct. Let’s add it to the method signature of initial_setup .</p><pre>fn initial_setup(mut commands: Commands, board: Res<Board>) {</pre><p>however… due to Bevy trait constraints this won’t compile as Board needs the Resource trait, so we will add a derive Resource trait to the Board.</p><pre>#[derive(Resource)]
+
+<p>For this we’re enqueuing a spawn of a <a href="https://docs.rs/bevy/latest/bevy/prelude/struct.NodeBundle.html">NodeBundle</a> to also be added to the scene. We tell it where to place the element as well as how large it should be in relation to the parent element. If we were to change the Val::Percent to other values, we will see the BG area shrink.</p><figure><img alt="" src="https://cdn-images-1.medium.com/max/1024/1*kWdCIYfDZ2W_abcRZPSEvQ.png" /></figure><p>Execute: cargo run</p><figure><img alt="" src="https://cdn-images-1.medium.com/max/800/1*92p57fy-hs96-nHTcSvKUg.png" /></figure><p>That’s… a lot of blue.</p><pre>git commit -a -m "Add camera and background on startup."</pre><p>Okay, great, we now have a background! Let’s actually draw some board elements.</p><p>For this, we will use bevy’s built in grid system… to know how many rows and columns we’ll need to add access to the board struct. Let’s add it to the method signature of initial_setup .</p><pre>fn initial_setup(mut commands: Commands, board: Res<Board>) {</pre><p>however… due to Bevy trait constraints this won’t compile as Board needs the Resource trait, so we will add a derive Resource trait to the Board.</p>
+
+```rust
+#[derive(Resource)]
 struct Board {
     squares_wide: u16,
     squares_high: u16,
-}</pre><p><em>Side note: </em>A resource in Bevy isn’t one of the letters in ECS, but is instead something that’s “globally unique” for the game and can be pulled into any system we need to read or modify the state in. We’ll later add a few more resources and elements to the Board which will be useful in many different systems.</p><p>In addition to changing the method signature and traits of the board, we need to add the board resource to be available for Bevy to pull in. For that we need to add the Board resource to our app in the main function. Only one resource of each type can be added to the app/world at a time, so if we constructed a second board and inserted it, bevy would panic.</p>```rust
+}
+```
+
+<p><em>Side note: </em>A resource in Bevy isn’t one of the letters in ECS, but is instead something that’s “globally unique” for the game and can be pulled into any system we need to read or modify the state in. We’ll later add a few more resources and elements to the Board which will be useful in many different systems.</p><p>In addition to changing the method signature and traits of the board, we need to add the board resource to be available for Bevy to pull in. For that we need to add the Board resource to our app in the main function. Only one resource of each type can be added to the app/world at a time, so if we constructed a second board and inserted it, bevy would panic.</p>
+
+```rust
 //main.rs main function
 //Add this line before the add_systems(Startup, initial_setup) call.
-    .insert_resource(board)</pre><p>Okay, now we move on to changing our background NodeBundle to be a grid layout. Replace our BEAUTIFUL blue background spawn with one that’s a grid type. Then after the grid is spawned, we will add some child nodes to it.</p><p>For this we iterate over the columns and and rows to add each of the squares, alternating the color of the grid node between red and black.</p><figure><img alt="" src="https://cdn-images-1.medium.com/max/1024/1*7wTfDXACKDmEemszcpMpSQ.png" /></figure>
+    .insert_resource(board)
+```
+
+<p>Okay, now we move on to changing our background NodeBundle to be a grid layout. Replace our BEAUTIFUL blue background spawn with one that’s a grid type. Then after the grid is spawned, we will add some child nodes to it.</p><p>For this we iterate over the columns and and rows to add each of the squares, alternating the color of the grid node between red and black.</p><figure><img alt="" src="https://cdn-images-1.medium.com/max/1024/1*7wTfDXACKDmEemszcpMpSQ.png" /></figure>
+
 
 ```rust
 //main.rs intialize_setup function
@@ -341,7 +358,9 @@ fn initial_setup(mut commands: Commands, board: Res<Board>) {
 }
 ```
 <p>Now let’s see what we have by executing: cargo run</p><figure><img alt="" src="https://cdn-images-1.medium.com/max/800/1*45yvqLScPUOVA1YXz6KAmA.png" /></figure><p>Sweet! Looks like we can play a huge game of checkers on that board!</p><p>Let’s commit it to be able to return here as we’re about to change a good amount of stuff! git commit -a -m "Checker board view."</p>
-<h3>Consistent Game State</h3>
+
+## Consistent Game State
+
 <p>The every other red + black was nice to demonstrate how to draw, but eventually we’ll need to change the colors of the squares based on their alive/dead status, so let’s store the board state in our Board Struct. For this we’ll add a 2d vector to the Board object:</p>
 
 ```rust
@@ -383,7 +402,9 @@ struct Board {
 ```
 
 <p>Ok, so we added a two dimensional array (vector of vectors) that contain a boolean of the state of the square of alive or dead — We then use that state for knowing what color of square we should spawn.</p><p>This allows us to know what state each square is in without needing some deep knowledge of how the colors are rendered.</p><p>Let’s commit!</p><p>git commit -a -m "Board now controls alive/dead color."</p>
-<h3>User Mouse Input</h3>
+
+## User Mouse Input
+
 <p>Many game engines have complex click handling logic, but fortunately Bevy solves most of this for us — Instead of using a NodeBundle for each RED/BLACK square, we can use a ButtonBundle instead. The way we interact with it is very similar to NodeBundle, but it also has built in support for button presses and mouse hovers. First we’ll migrate to ButtonBundles. We’re also going to use a White/Black color scheme to be more traditional w/ the Game of Life. Feel free to use whatever color scheme you’d like. Black will represent an alive square, and white will represent a dead one.</p>
 
 ```rust
@@ -671,7 +692,9 @@ fn button_system(mut interaction_query: Query<
 }
 ```
 <p>git commit -a -m "Use the game board array as the source of a square’s state."</p>
-<h3>Add Game Movement</h3>
+
+## Add Game Movement
+
 <p>Toggling buttons back and forth doesn’t exactly constitute a game, so let’s start adding some life to the board — First step on the journey is to toggle the square colors back and forth.</p><p>For that, we’ll add a new system which will be executed on a FixedUpdate (time) schedule, not on every Update event. If we were on each Update it would progress <em>far </em>too fast to keep track of.</p>
 
 ```rust
@@ -705,7 +728,8 @@ fn update_board(mut query: Query<(&amp;mut BackgroundColor, &amp;GridLocation)>,
 
 <p>execute it with cargo run You should see the tile colors oscillate every half second -- Houston, we have … movement!</p><p>While we can still click to toggle things… it’s not exactly a game... but let’s commit anyways.</p><p>git commit -a -m "Time based toggle of the squares back and forth."</p><p>For fun you can change the FixedUpdate to Update to see the crazy chaos that comes with updating WAY too fast!</p>
 
-<h3>The Game of Life and Death</h3>
+## The Game of Life and Death
+
 <p>Let’s add in the game of life rules.</p><p>For some background, Conway’s rules are:</p><pre>Any live cell with fewer than two live neighbours dies, as if by underpopulation.
 Any live cell with two or three live neighbours lives on to the next generation.
 Any live cell with more than three live neighbours dies, as if by overpopulation.
@@ -1053,7 +1077,8 @@ fn get_alive_neighbor_counts(board: &amp;Board) -> Vec<Vec<usize>> {
 
 <p>git commit -a -m "Implement the game logic for life and death."</p><p>Right on, right on, right on! So we’ve implemented the game logic and can toggle squares on and off <em>if </em>we’re fast enough. However… that doesn’t allow for much time — You can see in the gif my frustration that the deaths happened before I could click fast enough to sustain the population!</p><p>To allow for more thoughtful setting of the board state, let’s add in the ability to allow the user to pause the game logic so we can take our time creating the patterns.</p><p>This will allow the user to create Game of Life shapes like oscillators and gliders!</p><p>Below the oscillators are the top 4 items, and there’s a glider below that moves down and to the right.</p><figure><img alt="" src="https://cdn-images-1.medium.com/max/796/1*aPQemNdgp4lOT9FF5UJPAw.gif" /></figure>
 
-<h3>Taking Keyboard Input + updating GameState.</h3>
+## Taking Keyboard Input + updating GameState.
+
 <p>Ok, so our next goal will be to allow the users to hit the space-bar and pause the game progress such that they can click and make their own patterns with enough time without the life rules kicking in and killing off some poor square too early. For this, we will use the built-in bevy concept of a State. States are built into many features of the Bevy engine and allow us to run or <em>not </em>run certain systems depending on the current state.</p><p>We’ll create a GameState enum, deriving many traits (including States -Required by bevy). We also need to set the default Enum state the game will initially be in when we add the state to the app.</p>
 
 ```rust
@@ -1495,7 +1520,8 @@ fn get_alive_neighbor_counts(board: &amp;Board) -> Vec<Vec<usize>> {
 
 <p>Let’s commit for good measure!</p><p>git commit -a -m “Add ability to pause/resume and clear the board. Refactor the UX setting to be contained in the draw_board function.”</p>
 
-<h3>Iteration counter display</h3>
+## Iteration counter display
+
 <p>Next it’d be nice to display a few pieces of info about the game status, like the number of alive or dead squares and the number of iterations since the last start/clear.</p><p>For this we will add additional information into the board resource, and one that represents the current game iteration count. In addition we’ll add some no-member structs we’ll use later when spawning our new text areas.</p>
 
 ```rust
@@ -2156,7 +2182,9 @@ fn get_alive_neighbor_counts(board: &amp;Board) -> Vec<Vec<usize>> {
 ```
 
 <p>Now let’s see this bad-boy in action!</p><figure><img alt="" src="https://cdn-images-1.medium.com/max/796/1*cMR4gik6lfSvNfUlaobTfQ.gif" /></figure><p>git commit -a -m “Add status bar with iterations, gamestate, and alive square count.”</p>
-<h3>Event Triggering</h3>
+
+## Event Triggering
+
 <p>I added some counters on our systems to show how often an iteration ticks against the number of draw calls we execute….</p><pre>Draw count:225 iterations:9
 Draw count:251 iterations:10
 Draw count:277 iterations:11
@@ -2348,7 +2376,9 @@ fn draw_board(mut query: Query<(&amp;mut BackgroundColor, &amp;GridLocation)>, b
 //
 ```
 <p>(Full main.rs after the next section)</p><p>Fantastic, we now have an event system that will only execute our more expensive operations like a redraw when updates are necessary.</p><p>Commitments are useful! git commit -a -m “Add event based board updates, board drawing, and status bar updates.”</p>
-<h3>Kick it up to 11 (Home stretch now)</h3>
+
+## Kick it up to 11 (Home stretch now)
+
 <p>Ok, so far we’ve had a pretty small 20x20 game board — let’s kick it up a notch! We’ll reduce the square size and bump the board to 100x100.</p>
 
 ```rust
@@ -2792,5 +2822,7 @@ fn get_alive_neighbor_counts(board: &amp;Board) -> Vec<Vec<usize>> {
 ```
 
 <p>Last reminder — commit it for good measure!</p><p>git commit -a -m “Make board 100x100 and optimize dependencies.”</p>
-<h3>Wrap it up!</h3>
+
+## Wrap it up!
+
 <figure><img alt="" src="https://cdn-images-1.medium.com/max/400/1*FhrjoJmcVIV7w4Spn6vA_w.gif" /></figure><p>That wraps up our Bevy game of life tutorial! Thank you for reading, and I hope you had fun running through it with me! Please feel free to reach out if there are any areas that need to be clarified or corrected.</p><p>For additional fun there are a few things I didn’t add to the game that would be nice features.</p><ul><li>Add the ability to go back in history up to N iterations via a ‘previous’ keypress.</li><li>Game menu with configurable items like board size, game speed, game color scheme, etc.</li><li>The ability to resize the game’s window up and down including automatic tile scaling.</li><li>Add ability to ‘load’ a csv of various board states to try out different scenarios.</li><li>Add a ‘clear and randomize’ option as a keypress that restarts the sim with the squares in a random on/off configuration.</li></ul><img src="https://medium.com/_/stat?event=post.clientViewed&referrerSource=full_rss&postId=c7f7e5322640" width="1" height="1" alt="">
