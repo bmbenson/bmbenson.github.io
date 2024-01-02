@@ -208,7 +208,17 @@ fn initial_setup(mut commands: Commands) {
     });
 ```
 
-<p>For this we’re enqueuing a spawn of a <a href="https://docs.rs/bevy/latest/bevy/prelude/struct.NodeBundle.html">NodeBundle</a> to also be added to the scene. We tell it where to place the element as well as how large it should be in relation to the parent element. If we were to change the Val::Percent to other values, we will see the BG area shrink.</p><figure><img alt="" src="https://cdn-images-1.medium.com/max/1024/1*kWdCIYfDZ2W_abcRZPSEvQ.png" /></figure><p>Execute: cargo run</p><figure><img alt="" src="https://cdn-images-1.medium.com/max/800/1*92p57fy-hs96-nHTcSvKUg.png" /></figure><p>That’s… a lot of blue.</p><pre>git commit -a -m "Add camera and background on startup."</pre><p>Okay, great, we now have a background! Let’s actually draw some board elements.</p><p>For this, we will use bevy’s built in grid system… to know how many rows and columns we’ll need to add access to the board struct. Let’s add it to the method signature of initial_setup .</p><pre>fn initial_setup(mut commands: Commands, board: Res<Board>) {</pre><p>however… due to Bevy trait constraints this won’t compile as Board needs the Resource trait, so we will add a derive Resource trait to the Board.</p>
+<p>For this we’re enqueuing a spawn of a <a href="https://docs.rs/bevy/latest/bevy/prelude/struct.NodeBundle.html">NodeBundle</a> to also be added to the scene. We tell it where to place the element as well as how large it should be in relation to the parent element. If we were to change the Val::Percent to other values, we will see the BG area shrink.</p><figure><img alt="" src="https://cdn-images-1.medium.com/max/1024/1*kWdCIYfDZ2W_abcRZPSEvQ.png" /></figure><p>Execute: cargo run</p><figure><img alt="" src="https://cdn-images-1.medium.com/max/800/1*92p57fy-hs96-nHTcSvKUg.png" /></figure><p>That’s… a lot of blue.</p>
+
+<pre>git commit -a -m "Add camera and background on startup."</pre>
+
+<p>Okay, great, we now have a background! Let’s actually draw some board elements.</p><p>For this, we will use bevy’s built in grid system… to know how many rows and columns we’ll need to add access to the board struct. Let’s add it to the method signature of initial_setup.</p>
+
+```rust
+fn initial_setup(mut commands: Commands, board: Res<Board>) {
+```
+
+<p>however… due to Bevy trait constraints this won’t compile as Board needs the Resource trait, so we will add a derive Resource trait to the Board.</p>
 
 ```rust
 #[derive(Resource)]
