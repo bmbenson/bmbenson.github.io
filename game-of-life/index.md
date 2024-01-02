@@ -441,8 +441,10 @@ struct Board {
     squares_wide: u16,
     squares_high: u16,
     squares: Vec<Vec<bool>>,
-}</pre>And we’ll initialize it and pass it into the board constructor.
+}
 ```
+
+And we’ll initialize it and pass it into the board constructor.
 
 ```rust
 //main.rs main function
@@ -1208,7 +1210,7 @@ Below the oscillators are the top 4 items, and there’s a glider below that mov
 
 Ok, so our next goal will be to allow the users to hit the space-bar and pause the game progress such that they can click and make their own patterns with enough time without the life rules kicking in and killing off some poor square too early. For this, we will use the built-in bevy concept of a State. States are built into many features of the Bevy engine and allow us to run or *not* run certain systems depending on the current state.
 
-We’ll create a GameState enum, deriving many traits (including States -Required by bevy). We also need to set the default Enum state the game will initially be in when we add the state to the app.
+We’ll create a `GameState` enum, deriving many traits (including States -Required by bevy). We also need to set the default Enum state the game will initially be in when we add the state to the app.
 
 ```rust
 //main.rs
@@ -1221,7 +1223,7 @@ enum GameState {
 }
 ```
 
-Then we add the state to the app and we can convert the update_board function to be contingent on the Running gamestate.
+Then we add the state to the app and we can convert the `update_board` function to be contingent on the Running gamestate.
 
 ```rust
 //main.rs main function, after the insert_resources statements.
@@ -1363,7 +1365,12 @@ fn update_board(mut query: Query<&GridLocation>, mut board: ResMut<Board>) {
         //Update the data
         board.squares[c][r] = new_state;
     }
-}</pre>updated button_system<pre>#[allow(clippy::type_complexity)]
+}
+```
+Updated button_system:
+
+```rust
+#[allow(clippy::type_complexity)]
 fn button_system(mut interaction_query: Query<
     (
         &Interaction,
