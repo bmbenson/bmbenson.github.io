@@ -22,9 +22,26 @@ tag:
 <h3>Prerequisites</h3>
 <p>This tutorial assumes some familiarity with Rust and a working installation of git. If you aren’t read up, no worries! I have linked some resources to fill in your gaps.</p><ul><li>Installing Rust: <a href="https://www.rust-lang.org/tools/install">https://www.rust-lang.org/tools/install</a></li><li>Installing Git: <a href="https://git-scm.com/book/en/v2/Getting-Started-Installing-Git">https://git-scm.com/book/en/v2/Getting-Started-Installing-Git</a></li><li>Using Git: <a href="https://www.codecademy.com/learn/learn-git">https://www.codecademy.com/learn/learn-git</a></li></ul><p>For a Rust editor, I like VSCode these days: <a href="https://code.visualstudio.com/">https://code.visualstudio.com/</a> — we don’t cover anything VSCode specific in this tutorial, so use whatever editor suits you.</p><p>Ensure you are on the latest version of cargo and rust — to do so, execute rustup update to update your tools.</p><p>Throughout the tutorial I will be including the full main.rs file to resync. If you want to skip ahead, each section generally has a commit message you can find in <a href="https://github.com/bmbenson/bevy-game-of-life">my github repo</a> and using git you can follow along with much less typing + copy/paste.</p>
 <h3>Getting Started — Display something</h3>
-<p>In your Rust project workspace initialize the cargo and git workspace:</p><pre><code>cargo new game-of-life<br>cd game-of-life<br>git init<br>git add .<br>git commit -m &quot;Initial commit of a new cargo binary workspace.&quot;</code></pre><p><strong>Note: </strong>While we’re not covering git in this tutorial, I will be injecting reminders to commit the progress from time to time.</p><p>Add bevy to your cargo dependencies cargo add bevy</p><p>The cargo add command automatically added the new bevy dependency to your Cargo.toml file. Open up the file to see.</p><p>Cargo.toml should look like:</p><pre>[package]<br>name = &quot;game-of-life&quot;<br>version = &quot;0.1.0&quot;<br>edition = &quot;2021&quot;<br><br># See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html<br><br>[dependencies]<br>bevy = &quot;0.12.1&quot;</pre><p><em>Note: </em>As of the writing of this article, the latest bevy is 0.12.1 — If in the future there is an update that causes this tutorial to be incompatible, please reach out and I will work on making an update!</p><p>In your src/main.rs file, we’ll add the basic bevy app and run it to be sure the dependencies and the cargo workspace are set up properly. Throughout the code blocks I have included #![warn(clippy::pedantic)] which causes the linter to highlight areas of code that do not meet (stringent) best practices, but in some areas the linter suggestions conflict with the methods Bevy uses for passing params into the systems, so you’ll see we disable a few clippy checks where necessary.</p><pre>//main.rs<br>#![warn(clippy::pedantic)]<br><br>use bevy::prelude::*;<br><br>fn main() {<br>    println!(&quot;Bevy app starting!&quot;);<br>    App::new().run();<br>    println!(&quot;Bevy app complete!&quot;);<br>}</pre><p>When you execute cargo run You should see both println! lines in the console, but a bevy window does not yet show up to display anything. Let&#39;s correct that!</p><p>To show a window, we will need to use a Bevy Plugin, — Bevy splits separate parts of the app into plugins. To make a window display, we can get off the ground by adding a set of plugins as a group — one called DefaultPlugins</p>
-<pre><code>
-    
+<p>In your Rust project workspace initialize the cargo and git workspace:</p>
+<pre><code>cargo new game-of-life<br>cd game-of-life<br>git init<br>git add .<br>git commit -m &quot;Initial commit of a new cargo binary workspace.&quot;</code></pre>
+<p><strong>Note: </strong>While we’re not covering git in this tutorial, I will be injecting reminders to commit the progress from time to time.</p><p>Add bevy to your cargo dependencies cargo add bevy</p><p>The cargo add command automatically added the new bevy dependency to your Cargo.toml file. Open up the file to see.</p><p>Cargo.toml should look like:</p>
+<pre>[package]<br>name = &quot;game-of-life&quot;<br>version = &quot;0.1.0&quot;<br>edition = &quot;2021&quot;<br><br># See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html<br><br>[dependencies]<br>bevy = &quot;0.12.1&quot;</pre>
+<p><em>Note: </em>As of the writing of this article, the latest bevy is 0.12.1 — If in the future there is an update that causes this tutorial to be incompatible, please reach out and I will work on making an update!</p><p>In your src/main.rs file, we’ll add the basic bevy app and run it to be sure the dependencies and the cargo workspace are set up properly. Throughout the code blocks I have included #![warn(clippy::pedantic)] which causes the linter to highlight areas of code that do not meet (stringent) best practices, but in some areas the linter suggestions conflict with the methods Bevy uses for passing params into the systems, so you’ll see we disable a few clippy checks where necessary.</p>
+
+```rust
+//main.rs
+#![warn(clippy::pedantic)]
+
+use bevy::prelude::*;
+fn main() {
+    println!(&quot;Bevy app starting!&quot;);
+    App::new().run();
+    println!(&quot;Bevy app complete!&quot;);
+}
+```
+<p>When you execute cargo run You should see both println! lines in the console, but a bevy window does not yet show up to display anything. Let&#39;s correct that!</p><p>To show a window, we will need to use a Bevy Plugin, — Bevy splits separate parts of the app into plugins. To make a window display, we can get off the ground by adding a set of plugins as a group — one called DefaultPlugins</p>
+
+```rust
 //main.rs
 #![warn(clippy::pedantic)]
 use bevy::prelude::*;
@@ -35,11 +52,13 @@ fn main() {
         .add_plugins(DefaultPlugins)
         .run();
 }
-</code></pre>
+```
 
 <p>Now, when we execute cargo run we will see a blank window.</p><p>Let’s add a title to the window — instead of using only the default plugins with their default settings, we want to modify the WindowPlugin to have a title and specific resolution displayed.</p>
 
-<pre>//main.rs<br>#![warn(clippy::pedantic)]<br><br>use bevy::prelude::*;<br><br>// Window starting dimensions<br>const WINDOW_START_HEIGHT: f32 = 800.0;<br>const WINDOW_START_WIDTH: f32 = 700.0;<br>fn main() {<br>    println!(&quot;Game of life app starting!&quot;);<br>    App::new()<br>        .add_plugins(<br>            DefaultPlugins.set(WindowPlugin {<br>                primary_window: Some(Window {<br>                    title: &quot;Conway&#39;s Game of Life&quot;.into(),<br>                    resolution: (WINDOW_START_WIDTH, WINDOW_START_HEIGHT).into(),<br>                    ..default()<br>                }),<br>                ..default()<br>            })<br>        )<br>        .run();<br>}</pre>
+```rust
+//main\.rs<br>#![warn(clippy::pedantic)]<br><br>use bevy::prelude::*;<br><br>// Window starting dimensions<br>const WINDOW_START_HEIGHT: f32 = 800.0;<br>const WINDOW_START_WIDTH: f32 = 700.0;<br>fn main() {<br>    println!(&quot;Game of life app starting!&quot;);<br>    App::new()<br>        .add_plugins(<br>            DefaultPlugins.set(WindowPlugin {<br>                primary_window: Some(Window {<br>                    title: &quot;Conway&#39;s Game of Life&quot;.into(),<br>                    resolution: (WINDOW_START_WIDTH, WINDOW_START_HEIGHT).into(),<br>                    ..default()<br>                }),<br>                ..default()<br>            })<br>        )<br>        .run();<br>}
+```
 
 <p>For this we still use the majority of the DefaultPlugins, but we override the WindowPlugin with our custom settings &amp; leave all others default. Note: The ..default() is the part that fills in the remaining elements of the struct for us with the defaults, which for Bevy are quite sane.</p><p>Execute: cargo run</p><figure><img alt="" src="https://cdn-images-1.medium.com/max/700/1*aOaXgG7NtgGXfAss9ny34A.png" /></figure><p>NICE, we have something displayed &amp; our window is titled — let’s commit for good measure!</p><pre>git commit -a -m &quot;Window title and display functionality.&quot;</pre>
 <h3>Adding the game board</h3>
