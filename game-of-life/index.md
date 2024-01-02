@@ -27,7 +27,7 @@ This tutorial assumes some familiarity with Rust and a working installation of g
 
 For a Rust editor, I like VSCode these days: [https://code.visualstudio.com/](https://code.visualstudio.com/) — we don’t cover anything VSCode specific in this tutorial, so use whatever editor suits you.
 
-Ensure you are on the latest version of cargo and rust — to do so, execute rustup update to update your tools.
+Ensure you are on the latest version of cargo and rust — to do so, execute `rustup update` to update your tools.
 
 Throughout the tutorial I will be including the full main.rs file to resync. If you want to skip ahead, each section generally has a commit message you can find in [my github repo](https://github.com/bmbenson/bevy-game-of-life) and using git you can follow along with much less typing + copy/paste.
 
@@ -46,7 +46,7 @@ git commit -m "Initial commit of a new cargo binary workspace."
 
 Add bevy to your cargo dependencies with: `cargo add bevy`
 
-The cargo add command automatically added the new bevy dependency to your Cargo.toml file. Open up the file to see.
+The `cargo add` command automatically added the new bevy dependency to your Cargo.toml file. Open up the file to see.
 
 Cargo.toml should look like:
 
