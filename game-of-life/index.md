@@ -179,7 +179,7 @@ fn main() {
 
 The window displays similar to before, but the implementation is a bit more flexible with a custom board size, so we can change it easily in the future if we want a tiny or massive board (though we’ll likely want to decouple from a fixed pixel count per square if we get too large).
 
-To actually display something inside the window we need what Bevy calls a camera. In this case for our Game Of Life, we will be using a 2d camera. Bevy is an Entity Container System style engine, and for adding the camera we’ll add it as a system. See [here](https://bevyengine.org/learn/book/getting-started/ecs/) for more background and details on the benefits of ECS. The major thing it brings is the ability to separate out the data representations we need for our game from the functions (systems) that use them.
+To actually display something inside the window we need what Bevy calls a camera. In this case for our Game Of Life, we will be using a 2d camera. Bevy is an Entity Container System style engine, and for adding the camera we’ll add it as a system. See [here](https://bevyengine.org/learn/book/getting-started/ecs/) for more background and details on the benefits of ECS. The major benefit it brings is the ability to separate out the data representations we need for our game from the functions (systems) that use them.
 
 To add the camera, we will need to create an initialization function that adds the one-time elements to our app, which will be the 2d camera and a background — We do this by calling `.add_systems(Startup, initial_setup)` during our app build.
 
@@ -266,7 +266,7 @@ For this, we will use bevy’s built in grid system… to know how many rows and
 fn initial_setup(mut commands: Commands, board: Res<Board>) {
 ```
 
-however… due to Bevy trait constraints this won’t compile as Board needs the Resource trait, so we will add a derive Resource trait to the Board.
+However… due to Bevy trait constraints this won’t compile as Board needs the Resource trait, so we will add a derive Resource trait to the Board.
 
 ```rust
 #[derive(Resource)]
