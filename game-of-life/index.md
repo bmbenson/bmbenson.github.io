@@ -513,7 +513,7 @@ struct GridLocation {
 }
 ```
 
-<p>And in initial_setupafter our color setting we spawn the ButtonBundle and the GridLocation in a tuple.</p>
+<p>And in initial_setup after our color setting we spawn the ButtonBundle and the GridLocation in a tuple.</p>
 
 ```rust
 //main.rs initial_setup
@@ -526,7 +526,8 @@ struct GridLocation {
                             background_color: BackgroundColor(color),
                             ..default()
                         }, grid_loc)
-                    );```
+                    );
+```
 
 <p>This lets us change our button system query to include the grid location. We also need to add a mutable reference to the board as we’re planning to modify the board on a button click.</p>
 
@@ -701,7 +702,8 @@ fn button_system(mut interaction_query: Query<
     }
 }
 ```
-<p>git commit -a -m "Use the game board array as the source of a square’s state."</p>
+
+`git commit -a -m "Use the game board array as the source of a square’s state."`
 
 ## Add Game Movement
 
@@ -736,14 +738,24 @@ fn update_board(mut query: Query<(&amp;mut BackgroundColor, &amp;GridLocation)>,
 }
 ```
 
-<p>execute it with cargo run You should see the tile colors oscillate every half second -- Houston, we have … movement!</p><p>While we can still click to toggle things… it’s not exactly a game... but let’s commit anyways.</p><p>git commit -a -m "Time based toggle of the squares back and forth."</p><p>For fun you can change the FixedUpdate to Update to see the crazy chaos that comes with updating WAY too fast!</p>
+<p>execute it with cargo run You should see the tile colors oscillate every half second -- Houston, we have … movement!</p><p>While we can still click to toggle things… it’s not exactly a game... but let’s commit anyways.</p>
+
+`git commit -a -m "Time based toggle of the squares back and forth."`
+
+<p>For fun you can change the FixedUpdate to Update to see the crazy chaos that comes with updating WAY too fast!</p>
 
 ## The Game of Life and Death
 
-<p>Let’s add in the game of life rules.</p><p>For some background, Conway’s rules are:</p><pre>Any live cell with fewer than two live neighbours dies, as if by underpopulation.
+<p>Let’s add in the game of life rules.</p><p>For some background, Conway’s rules are:</p>
+
+```
+Any live cell with fewer than two live neighbours dies, as if by underpopulation.
 Any live cell with two or three live neighbours lives on to the next generation.
 Any live cell with more than three live neighbours dies, as if by overpopulation.
-Any dead cell with exactly three live neighbours becomes a live cell, as if by reproduction.</pre><p>To support easier evaluation, let’s create a function to calculate the number of neighbors.</p><p>This function checks our 8 (in bounds) neighbors to get an alive neighbor count. We calculate <em>all </em>neighbors <em>before </em>modifying the board object as if we do the check &amp; set while iterating through, we will inappropriately change the outcome of the yet to be evaluated cells.</p>
+Any dead cell with exactly three live neighbours becomes a live cell, as if by reproduction.
+```
+
+<p>To support easier evaluation, let’s create a function to calculate the number of neighbors.</p><p>This function checks our 8 (in bounds) neighbors to get an alive neighbor count. We calculate <em>all </em>neighbors <em>before </em>modifying the board object as if we do the check &amp; set while iterating through, we will inappropriately change the outcome of the yet to be evaluated cells.</p>
 
 ```rust
 //main.rs below update_board
@@ -1129,7 +1141,8 @@ fn keyboard_system(keyboard_input: Res<Input<KeyCode>>, game_state: Res<State<Ga
             },
         }
     }
-}```
+}
+```
 
 <p>Sweet — this keyboard system now will toggle the game between running and paused. The only method currently contingent on <strong>Running</strong> it is the update_board function that runs the game rules.</p>
 
@@ -1563,8 +1576,8 @@ let board = Board {squares_wide: cols, squares_high: rows, squares: board_state,
 let game_metadata = GameMetadata::default();
 // Add game_metadata after the board insertion.
 .insert_resource(game_metadata)
-
 ```
+
 <p>Next we’ll add a new UX element for a status bar at the bottom of the game.</p><p>In the area we already declare some of the consts, add a pixel height of the status bar as well as resize the window to accomodate out new space.</p>
 
 ```rust
@@ -1578,6 +1591,7 @@ let window_height =  f32::from(TILE_SIZE * board.squares_high) + STATUS_BAR_PX;
 // Update the resolution aspect of the window setting to no longer require f32::from
 resolution: (window_width, window_height).into(),
 ```
+
 <p>Previously our game grid layout was added to the base world at 100% height and width, now we need to add an additional status bar below the game grid, so we’ll add another layer of grid layout, this time with 1 column and two rows. In addition, we will use a fixed size for the status bar row, and configure the game grid row to take up all the remaining space (base height <em>minus </em>the fixed number of pixels).</p><p>Here’s a high level view of what we’re going to change to.</p><figure><img alt="" src="https://cdn-images-1.medium.com/max/1024/1*YMP9Pnq5PwpZ_Dab7LRnaw.png" /></figure><p>First thing we spawn will be the 1 column, 2 row grid layout.</p>
 
 ```rust
@@ -1713,8 +1727,9 @@ fn status_bar_text_update(mut text_params: ParamSet<(Query<&amp;mut Text, With<G
 }
 // in main() where the systems are intitialized, update the Update system addition
 .add_systems(Update, (button_system, keyboard_system, draw_board, status_bar_text_update).chain())
-
 ```
+
+
 <p>We also have to change the square count and increment the iteration counter in both update_board, the keyboard_system, and button_system functions.</p>
 
 ```rust
@@ -2191,14 +2206,22 @@ fn get_alive_neighbor_counts(board: &amp;Board) -> Vec<Vec<usize>> {
 }
 ```
 
-<p>Now let’s see this bad-boy in action!</p><figure><img alt="" src="https://cdn-images-1.medium.com/max/796/1*cMR4gik6lfSvNfUlaobTfQ.gif" /></figure><p>git commit -a -m “Add status bar with iterations, gamestate, and alive square count.”</p>
+<p>Now let’s see this bad-boy in action!</p><figure><img alt="" src="https://cdn-images-1.medium.com/max/796/1*cMR4gik6lfSvNfUlaobTfQ.gif" /></figure>
+
+`git commit -a -m “Add status bar with iterations, gamestate, and alive square count.”`
 
 ## Event Triggering
 
-<p>I added some counters on our systems to show how often an iteration ticks against the number of draw calls we execute….</p><pre>Draw count:225 iterations:9
+<p>I added some counters on our systems to show how often an iteration ticks against the number of draw calls we execute….</p>
+
+```
+Draw count:225 iterations:9
 Draw count:251 iterations:10
 Draw count:277 iterations:11
-Draw count:303 iterations:12</pre><p>Whoa, this means for every iteration we execute, we have drawn the board about <strong><em>25</em></strong> times! <strong>Most </strong>of these will be draws that were already present, so wouldn’t it be nice if we only drew the board when we need to??</p><p>The naive approach might be to only do draw_board with the FixedUpdate schedule after we call update_board on, but there are a few issues with that approach:</p><ol><li>update_board only executes when the game is running, so if we were paused, we would only see the results of mouse clicks after the game is resumed.</li><li>Due to the fixed update nature of update_board, our clicks to the screen will be delayed until up to 1/2 sec after we click. This would make the user-input feel sluggish.</li></ol><p>Luckily Bevy includes an Event feature specifically for this — We’ll add various event types to represent which areas need to be redrawn, then we can fire off a redraw event from the mouse, keyboard, or fixed rate update_board functions.</p><p>Events in bevy are sent with an <a href="https://docs.rs/bevy/latest/bevy/prelude/struct.EventWriter.html">EventWriter </a>and read via… you guessed it, an <a href="https://docs.rs/bevy/latest/bevy/prelude/struct.EventReader.html">EventReader</a>! The events can be sent from any system and are passed into the system functions like other parameters once registered to the app.</p><p>A Bevy event can contain custom data, but for our use, we just want them to be a signal to execute some work. For this, we’ll add some new structs with the Event &amp; Default traits derived.</p>
+Draw count:303 iterations:12
+```
+
+<p>Whoa, this means for every iteration we execute, we have drawn the board about <strong><em>25</em></strong> times! <strong>Most </strong>of these will be draws that were already present, so wouldn’t it be nice if we only drew the board when we need to??</p><p>The naive approach might be to only do draw_board with the FixedUpdate schedule after we call update_board on, but there are a few issues with that approach:</p><ol><li>update_board only executes when the game is running, so if we were paused, we would only see the results of mouse clicks after the game is resumed.</li><li>Due to the fixed update nature of update_board, our clicks to the screen will be delayed until up to 1/2 sec after we click. This would make the user-input feel sluggish.</li></ol><p>Luckily Bevy includes an Event feature specifically for this — We’ll add various event types to represent which areas need to be redrawn, then we can fire off a redraw event from the mouse, keyboard, or fixed rate update_board functions.</p><p>Events in bevy are sent with an <a href="https://docs.rs/bevy/latest/bevy/prelude/struct.EventWriter.html">EventWriter </a>and read via… you guessed it, an <a href="https://docs.rs/bevy/latest/bevy/prelude/struct.EventReader.html">EventReader</a>! The events can be sent from any system and are passed into the system functions like other parameters once registered to the app.</p><p>A Bevy event can contain custom data, but for our use, we just want them to be a signal to execute some work. For this, we’ll add some new structs with the Event &amp; Default traits derived.</p>
 
 ```rust
 //main.rs
@@ -2222,6 +2245,7 @@ fn game_tick_timer(mut game_board_update_needed: EventWriter<BoardNeedsUpdateEve
     game_board_update_needed.send_default();
 }
 ```
+
 <p>Now that we have this new function, let’s change it to fire on the fixed schedule instead of update_board. We’ll also move update_board to execute on the update schedule so we can pick up events in the same cycle as they are fired off. We also need to add the events in a similar fashion as the resources.</p>
 
 ```rust
@@ -2249,7 +2273,6 @@ fn game_tick_timer(mut game_board_update_needed: EventWriter<BoardNeedsUpdateEve
         .add_systems(Startup, initial_setup)
         .add_systems(Update, (button_system, keyboard_system, update_board, draw_board, status_bar_text_update).chain())
         .run();
-
 ```
 
 <p>This is where the strict system ordering comes in very handy as we can fire off an event in response to a mouse click or keyboard press and pick up that event in the later functions that execute on the same game cycle.</p><p>Now we’ll update our keyboard and mouse systems to fire off some events on the appropriate changes. Some updates require a board redraw, while others need to update the status bar.</p><p>Update the keyboard system to take all three event writers in and fire off the events when the appropriate key is pressed. We also prune out the status bar update from being directly in the keyboard system to have better duty separation.</p>
@@ -2355,6 +2378,7 @@ fn status_bar_text_update(mut text_params: ParamSet<(Query<&amp;mut Text, With<G
     iter_state_query.single_mut().sections[0].value = new_text;
 }
 ```
+
 <p>Now we’ll gate update_board on the event reader, but also pass in the event writers for both draw event types. <em>As a side note: </em>We should have all event writers generally execute before the event reads may check for the events.</p>
 
 ```rust
@@ -2372,6 +2396,7 @@ fn update_board(mut query: Query<&amp;GridLocation>, mut board: ResMut<Board>, m
     status_bar_needs_update.send_default();
 }
 ```
+
 <p>We also need to gate draw_board.</p>
 
 ```rust
@@ -2385,6 +2410,7 @@ fn draw_board(mut query: Query<(&amp;mut BackgroundColor, &amp;GridLocation)>, b
     board_needs_draw_events.clear();
 //
 ```
+
 <p>(Full main.rs after the next section)</p><p>Fantastic, we now have an event system that will only execute our more expensive operations like a redraw when updates are necessary.</p><p>Commitments are useful! git commit -a -m “Add event based board updates, board drawing, and status bar updates.”</p>
 
 ## Kick it up to 11 (Home stretch now)
@@ -2402,7 +2428,8 @@ let rows = 100;
 ```
 
 <p>When you execute cargo run you may notice the game running a bit slower… And on modern PCs that seems odd… it’s only 10,000 squares to run a sim on… it certainly should be able to handle it.</p><p>The primary reason is Bevy runs <strong><em>very </em></strong>slowly when it’s debug variant is built, so we want to add some optimization for it (and other dependencies).</p><p>Add this to the bottom of your Cargo.toml file and we should be back to a 1/2 second tick time.</p>
-```
+
+```yaml
 //Cargo.toml
 //After [dependencies] block.
 
@@ -2831,7 +2858,9 @@ fn get_alive_neighbor_counts(board: &amp;Board) -> Vec<Vec<usize>> {
 }
 ```
 
-<p>Last reminder — commit it for good measure!</p><p>git commit -a -m “Make board 100x100 and optimize dependencies.”</p>
+<p>Last reminder — commit it for good measure!</p>
+
+`git commit -a -m “Make board 100x100 and optimize dependencies.”`
 
 ## Wrap it up!
 
