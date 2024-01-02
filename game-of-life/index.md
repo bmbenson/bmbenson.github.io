@@ -32,6 +32,7 @@ git add .
 git commit -m "Initial commit of a new cargo binary workspace."
 ```
 <p><strong>Note: </strong>While we’re not covering git in this tutorial, I will be injecting reminders to commit the progress from time to time.</p><p>Add bevy to your cargo dependencies cargo add bevy</p><p>The cargo add command automatically added the new bevy dependency to your Cargo.toml file. Open up the file to see.</p><p>Cargo.toml should look like:</p>
+
 ```yaml
 [package]
 name = "game-of-life"
@@ -43,6 +44,7 @@ edition = "2021"
 [dependencies]
 bevy = "0.12.1"
 ```
+
 <p><em>Note: </em>As of the writing of this article, the latest bevy is 0.12.1 — If in the future there is an update that causes this tutorial to be incompatible, please reach out and I will work on making an update!</p><p>In your src/main.rs file, we’ll add the basic bevy app and run it to be sure the dependencies and the cargo workspace are set up properly. Throughout the code blocks I have included #![warn(clippy::pedantic)] which causes the linter to highlight areas of code that do not meet (stringent) best practices, but in some areas the linter suggestions conflict with the methods Bevy uses for passing params into the systems, so you’ll see we disable a few clippy checks where necessary.</p>
 
 ```rust
@@ -201,7 +203,7 @@ fn initial_setup(mut commands: Commands) {
         ..default()
     });
 ```
-<p>For this we’re enqueuing a spawn of a <a href="https://docs.rs/bevy/latest/bevy/prelude/struct.NodeBundle.html">NodeBundle</a> to also be added to the scene. We tell it where to place the element as well as how large it should be in relation to the parent element. If we were to change the Val::Percent to other values, we will see the BG area shrink.</p><figure><img alt="" src="https://cdn-images-1.medium.com/max/1024/1*kWdCIYfDZ2W_abcRZPSEvQ.png" /></figure><p>Execute: cargo run</p><figure><img alt="" src="https://cdn-images-1.medium.com/max/800/1*92p57fy-hs96-nHTcSvKUg.png" /></figure><p>That’s… a lot of blue.</p><pre>git commit -a -m "Add camera and background on startup."</pre><p>Okay, great, we now have a background! Let’s actually draw some board elements.</p><p>For this, we will use bevy’s built in grid system… to know how many rows and columns we’ll need to add access to the board struct. Let’s add it to the method signature of initial_setup .</p><pre>fn initial_setup(mut commands: Commands, board: Res&lt;Board&gt;) {</pre><p>however… due to Bevy trait constraints this won’t compile as Board needs the Resource trait, so we will add a derive Resource trait to the Board.</p><pre>#[derive(Resource)]
+<p>For this we’re enqueuing a spawn of a <a href="https://docs.rs/bevy/latest/bevy/prelude/struct.NodeBundle.html">NodeBundle</a> to also be added to the scene. We tell it where to place the element as well as how large it should be in relation to the parent element. If we were to change the Val::Percent to other values, we will see the BG area shrink.</p><figure><img alt="" src="https://cdn-images-1.medium.com/max/1024/1*kWdCIYfDZ2W_abcRZPSEvQ.png" /></figure><p>Execute: cargo run</p><figure><img alt="" src="https://cdn-images-1.medium.com/max/800/1*92p57fy-hs96-nHTcSvKUg.png" /></figure><p>That’s… a lot of blue.</p><pre>git commit -a -m "Add camera and background on startup."</pre><p>Okay, great, we now have a background! Let’s actually draw some board elements.</p><p>For this, we will use bevy’s built in grid system… to know how many rows and columns we’ll need to add access to the board struct. Let’s add it to the method signature of initial_setup .</p><pre>fn initial_setup(mut commands: Commands, board: Res<Board>) {</pre><p>however… due to Bevy trait constraints this won’t compile as Board needs the Resource trait, so we will add a derive Resource trait to the Board.</p><pre>#[derive(Resource)]
 struct Board {
     squares_wide: u16,
     squares_high: u16,
@@ -294,7 +296,7 @@ fn main() {
         .run();
 }
 
-fn initial_setup(mut commands: Commands, board: Res&lt;Board&gt;) {
+fn initial_setup(mut commands: Commands, board: Res<Board>) {
     commands.spawn(Camera2dBundle::default());
     //Draw the grid layout!
     commands
@@ -348,7 +350,7 @@ fn initial_setup(mut commands: Commands, board: Res&lt;Board&gt;) {
 struct Board {
     squares_wide: u16,
     squares_high: u16,
-    squares: Vec&lt;Vec&lt;bool&gt;&gt;,
+    squares: Vec<Vec<bool>>,
 }</pre><p>And we’ll initialize it and pass it into the board constructor.</p>
 ```
 
@@ -388,7 +390,7 @@ struct Board {
 //main.rs
 //In initial_setup - Replace the child NodeBundle with one for a ButtonBundle.
 #[allow(clippy::needless_pass_by_value)]
-fn initial_setup(mut commands: Commands, board: Res&lt;Board&gt;) {
+fn initial_setup(mut commands: Commands, board: Res<Board>) {
     commands.spawn(Camera2dBundle::default());
     //Button style
     let button_style = Style {
@@ -444,16 +446,16 @@ fn initial_setup(mut commands: Commands, board: Res&lt;Board&gt;) {
         .add_systems(Update, button_system)
 //Add to the bottom of the file.
 #[allow(clippy::type_complexity)]
-fn button_system(mut interaction_query: Query&lt;
+fn button_system(mut interaction_query: Query<
     (
         &amp;Interaction,
         &amp;mut BackgroundColor,
     ),
-    (Changed&lt;Interaction&gt;, With&lt;Button&gt;),
-&gt;) {
+    (Changed<Interaction>, With<Button>),
+>) {
     for (interaction, mut color) in &amp;mut interaction_query {
         match *interaction {
-            Interaction::Pressed =&gt; {
+            Interaction::Pressed => {
                 println!("Button pressed!");
                 *color = if color.0.eq(&amp;Color::BLACK) {
                     Color::WHITE
@@ -462,7 +464,7 @@ fn button_system(mut interaction_query: Query&lt;
                     Color::BLACK
                 }.into();
             },
-            Interaction::Hovered | Interaction::None =&gt; {},
+            Interaction::Hovered | Interaction::None => {},
         }
     }
 }
@@ -500,17 +502,17 @@ struct GridLocation {
 ```rust
 //main.rs
 #[allow(clippy::type_complexity)]
-fn button_system(mut interaction_query: Query&lt;
+fn button_system(mut interaction_query: Query<
         (
             &amp;Interaction,
             &amp;mut BackgroundColor,
             &amp;GridLocation
         ),
-        (Changed&lt;Interaction&gt;, With&lt;Button&gt;),
-    &gt;, mut board: ResMut&lt;Board&gt;) {
+        (Changed<Interaction>, With<Button>),
+    >, mut board: ResMut<Board>) {
     for (interaction, mut color, grid_loc) in &amp;mut interaction_query {
         match *interaction {
-            Interaction::Pressed =&gt; {
+            Interaction::Pressed => {
                 let r = usize::from(grid_loc.row);
                 let c = usize::from(grid_loc.column);
                 //Get the game state.
@@ -525,7 +527,7 @@ fn button_system(mut interaction_query: Query&lt;
                 }
                 board.squares[c][r] = !cur;
             },
-            Interaction::Hovered | Interaction::None =&gt; {},
+            Interaction::Hovered | Interaction::None => {},
         }
     }
 }
@@ -546,7 +548,7 @@ const TILE_SIZE: u16 = 40;
 struct Board {
     squares_wide: u16,
     squares_high: u16,
-    squares: Vec&lt;Vec&lt;bool&gt;&gt;,
+    squares: Vec<Vec<bool>>,
 }
 
 #[derive(Component, Debug)]
@@ -586,7 +588,7 @@ fn main() {
         .run();
 }
 
-fn initial_setup(mut commands: Commands, board: Res&lt;Board&gt;) {
+fn initial_setup(mut commands: Commands, board: Res<Board>) {
     commands.spawn(Camera2dBundle::default());
     //Button style
     let button_style = Style {
@@ -638,17 +640,17 @@ fn initial_setup(mut commands: Commands, board: Res&lt;Board&gt;) {
 }
 
 #[allow(clippy::type_complexity)]
-fn button_system(mut interaction_query: Query&lt;
+fn button_system(mut interaction_query: Query<
     (
         &amp;Interaction,
         &amp;mut BackgroundColor,
         &amp;GridLocation
     ),
-    (Changed&lt;Interaction&gt;, With&lt;Button&gt;),
-&gt;, mut board: ResMut&lt;Board&gt;) {
+    (Changed<Interaction>, With<Button>),
+>, mut board: ResMut<Board>) {
     for (interaction, mut color, grid_loc) in &amp;mut interaction_query {
         match *interaction {
-            Interaction::Pressed =&gt; {
+            Interaction::Pressed => {
                 let r = usize::from(grid_loc.row);
                 let c = usize::from(grid_loc.column);
                 //Get the game state.
@@ -663,7 +665,7 @@ fn button_system(mut interaction_query: Query&lt;
                 }
                 board.squares[c][r] = !cur;
             },
-            Interaction::Hovered | Interaction::None =&gt; {},
+            Interaction::Hovered | Interaction::None => {},
         }
     }
 }
@@ -679,13 +681,13 @@ fn button_system(mut interaction_query: Query&lt;
 const UPDATE_RATE_SEC: f64 = 0.5;
 //main.rs in the main function
 // To the app initialization
-        .insert_resource(Time::&lt;Fixed&gt;::from_seconds(UPDATE_RATE_SEC))
+        .insert_resource(Time::<Fixed>::from_seconds(UPDATE_RATE_SEC))
         .add_systems(FixedUpdate, update_board)
         
 
 //main.rs below button_system
 //Update the board for every entity with both a backgroundcolor and a gridlocation.
-fn update_board(mut query: Query&lt;(&amp;mut BackgroundColor, &amp;GridLocation)&gt;, mut board: ResMut&lt;Board&gt;) {
+fn update_board(mut query: Query<(&amp;mut BackgroundColor, &amp;GridLocation)>, mut board: ResMut<Board>) {
     for (mut color, grid_loc) in &amp;mut query {
         let c = usize::from(grid_loc.column);
         let r = usize::from(grid_loc.row);
@@ -711,7 +713,7 @@ Any dead cell with exactly three live neighbours becomes a live cell, as if by r
 
 ```rust
 //main.rs below update_board
-fn get_alive_neighbor_counts(board: &amp;Board) -&gt; Vec&lt;Vec&lt;usize&gt;&gt; {
+fn get_alive_neighbor_counts(board: &amp;Board) -> Vec<Vec<usize>> {
     let height = usize::from(board.squares_high);
     let width = usize::from(board.squares_wide);
     let mut neighbor_counts = vec![vec![0; height]; width];
@@ -719,9 +721,9 @@ fn get_alive_neighbor_counts(board: &amp;Board) -&gt; Vec&lt;Vec&lt;usize&gt;&gt
         for (r, item) in  row.iter_mut().enumerate() {
             let mut neighbors = 0;
             //Top
-            if r &gt; 0 {
+            if r > 0 {
                 //T/L
-                if c &gt; 0 &amp;&amp; board.squares[c-1][r-1] {
+                if c > 0 &amp;&amp; board.squares[c-1][r-1] {
                     neighbors += 1;
                 }
                 //T/C
@@ -729,22 +731,22 @@ fn get_alive_neighbor_counts(board: &amp;Board) -&gt; Vec&lt;Vec&lt;usize&gt;&gt
                     neighbors += 1;
                 }
                 //T/R
-                if c+1 &lt; width &amp;&amp; board.squares[c+1][r-1] {
+                if c+1 < width &amp;&amp; board.squares[c+1][r-1] {
                     neighbors += 1;
                 }
             }
             //Left
-            if c &gt; 0 &amp;&amp; board.squares[c-1][r] {
+            if c > 0 &amp;&amp; board.squares[c-1][r] {
                 neighbors += 1;
             }
             //Right
-            if c+1 &lt; width &amp;&amp; board.squares[c+1][r] {
+            if c+1 < width &amp;&amp; board.squares[c+1][r] {
                 neighbors += 1;
             }
             //Bottom
-            if r+1 &lt; height {
+            if r+1 < height {
                 //B/L
-                if c &gt; 0 &amp;&amp; board.squares[c-1][r+1] {
+                if c > 0 &amp;&amp; board.squares[c-1][r+1] {
                     neighbors += 1;
                 }
                 //B/C
@@ -752,7 +754,7 @@ fn get_alive_neighbor_counts(board: &amp;Board) -&gt; Vec&lt;Vec&lt;usize&gt;&gt
                     neighbors += 1;
                 }
                 //B/R
-                if c+1 &lt; width &amp;&amp; board.squares[c+1][r+1] {
+                if c+1 < width &amp;&amp; board.squares[c+1][r+1] {
                     neighbors += 1;
                 }
             }
@@ -768,7 +770,7 @@ fn get_alive_neighbor_counts(board: &amp;Board) -&gt; Vec&lt;Vec&lt;usize&gt;&gt
 ```rust
 //main.rs
 //Update the board for every entity with both a backgroundcolor and a gridlocation..=
-fn update_board(mut query: Query&lt;(&amp;mut BackgroundColor, &amp;GridLocation)&gt;, mut board: ResMut&lt;Board&gt;) {
+fn update_board(mut query: Query<(&amp;mut BackgroundColor, &amp;GridLocation)>, mut board: ResMut<Board>) {
     //Fetch the neighbor counts.
     let neighbor_counts = get_alive_neighbor_counts(board.as_ref());
     for (mut color, grid_loc) in &amp;mut query {
@@ -780,7 +782,7 @@ fn update_board(mut query: Query&lt;(&amp;mut BackgroundColor, &amp;GridLocation
         if cur {
             // Live cell
             //fewer than two live neighbours dies, as if by underpopulation.
-            if n &lt; 2 {
+            if n < 2 {
                 //Underpop
                 new_state = false;
             }
@@ -790,7 +792,7 @@ fn update_board(mut query: Query&lt;(&amp;mut BackgroundColor, &amp;GridLocation
                 new_state = true;
             }
             //more than three live neighbours dies, as if by overpopulation.
-            if n &gt; 3 {
+            if n > 3 {
                 //Overpop
                 new_state = false;
             }
@@ -829,7 +831,7 @@ const UPDATE_RATE_SEC: f64 = 0.5;
 struct Board {
     squares_wide: u16,
     squares_high: u16,
-    squares: Vec&lt;Vec&lt;bool&gt;&gt;,
+    squares: Vec<Vec<bool>>,
 }
 
 #[derive(Component, Debug)]
@@ -864,14 +866,14 @@ fn main() {
             })
         )
         .insert_resource(board)
-        .insert_resource(Time::&lt;Fixed&gt;::from_seconds(UPDATE_RATE_SEC))
+        .insert_resource(Time::<Fixed>::from_seconds(UPDATE_RATE_SEC))
         .add_systems(FixedUpdate, update_board)
         .add_systems(Startup, initial_setup)
         .add_systems(Update, button_system)
         .run();
 }
 
-fn initial_setup(mut commands: Commands, board: Res&lt;Board&gt;) {
+fn initial_setup(mut commands: Commands, board: Res<Board>) {
     commands.spawn(Camera2dBundle::default());
     //Button style
     let button_style = Style {
@@ -923,17 +925,17 @@ fn initial_setup(mut commands: Commands, board: Res&lt;Board&gt;) {
 }
 
 #[allow(clippy::type_complexity)]
-fn button_system(mut interaction_query: Query&lt;
+fn button_system(mut interaction_query: Query<
     (
         &amp;Interaction,
         &amp;mut BackgroundColor,
         &amp;GridLocation
     ),
-    (Changed&lt;Interaction&gt;, With&lt;Button&gt;),
-&gt;, mut board: ResMut&lt;Board&gt;) {
+    (Changed<Interaction>, With<Button>),
+>, mut board: ResMut<Board>) {
     for (interaction, mut color, grid_loc) in &amp;mut interaction_query {
         match *interaction {
-            Interaction::Pressed =&gt; {
+            Interaction::Pressed => {
                 let r = usize::from(grid_loc.row);
                 let c = usize::from(grid_loc.column);
                 //Get the game state.
@@ -948,12 +950,12 @@ fn button_system(mut interaction_query: Query&lt;
                 }
                 board.squares[c][r] = !cur;
             },
-            Interaction::Hovered | Interaction::None =&gt; {},
+            Interaction::Hovered | Interaction::None => {},
         }
     }
 }
 
-fn update_board(mut query: Query&lt;(&amp;mut BackgroundColor, &amp;GridLocation)&gt;, mut board: ResMut&lt;Board&gt;) {
+fn update_board(mut query: Query<(&amp;mut BackgroundColor, &amp;GridLocation)>, mut board: ResMut<Board>) {
     //Fetch the neighbor counts.
     let neighbor_counts = get_alive_neighbor_counts(board.as_ref());
     for (mut color, grid_loc) in &amp;mut query {
@@ -965,7 +967,7 @@ fn update_board(mut query: Query&lt;(&amp;mut BackgroundColor, &amp;GridLocation
         if cur {
             // Live cell
             //fewer than two live neighbours dies, as if by underpopulation.
-            if n &lt; 2 {
+            if n < 2 {
                 //Underpop
                 new_state = false;
             }
@@ -975,7 +977,7 @@ fn update_board(mut query: Query&lt;(&amp;mut BackgroundColor, &amp;GridLocation
                 new_state = true;
             }
             //more than three live neighbours dies, as if by overpopulation.
-            if n &gt; 3 {
+            if n > 3 {
                 //Overpop
                 new_state = false;
             }
@@ -997,7 +999,7 @@ fn update_board(mut query: Query&lt;(&amp;mut BackgroundColor, &amp;GridLocation
     }
 }
 
-fn get_alive_neighbor_counts(board: &amp;Board) -&gt; Vec&lt;Vec&lt;usize&gt;&gt; {
+fn get_alive_neighbor_counts(board: &amp;Board) -> Vec<Vec<usize>> {
     let height = usize::from(board.squares_high);
     let width = usize::from(board.squares_wide);
     let mut neighbor_counts = vec![vec![0; height]; width];
@@ -1005,9 +1007,9 @@ fn get_alive_neighbor_counts(board: &amp;Board) -&gt; Vec&lt;Vec&lt;usize&gt;&gt
         for (r, item) in  row.iter_mut().enumerate() {
             let mut neighbors = 0;
             //Top
-            if r &gt; 0 {
+            if r > 0 {
                 //T/L
-                if c &gt; 0 &amp;&amp; board.squares[c-1][r-1] {
+                if c > 0 &amp;&amp; board.squares[c-1][r-1] {
                     neighbors += 1;
                 }
                 //T/C
@@ -1015,22 +1017,22 @@ fn get_alive_neighbor_counts(board: &amp;Board) -&gt; Vec&lt;Vec&lt;usize&gt;&gt
                     neighbors += 1;
                 }
                 //T/R
-                if c+1 &lt; width &amp;&amp; board.squares[c+1][r-1] {
+                if c+1 < width &amp;&amp; board.squares[c+1][r-1] {
                     neighbors += 1;
                 }
             }
             //Left
-            if c &gt; 0 &amp;&amp; board.squares[c-1][r] {
+            if c > 0 &amp;&amp; board.squares[c-1][r] {
                 neighbors += 1;
             }
             //Right
-            if c+1 &lt; width &amp;&amp; board.squares[c+1][r] {
+            if c+1 < width &amp;&amp; board.squares[c+1][r] {
                 neighbors += 1;
             }
             //Bottom
-            if r+1 &lt; height {
+            if r+1 < height {
                 //B/L
-                if c &gt; 0 &amp;&amp; board.squares[c-1][r+1] {
+                if c > 0 &amp;&amp; board.squares[c-1][r+1] {
                     neighbors += 1;
                 }
                 //B/C
@@ -1038,7 +1040,7 @@ fn get_alive_neighbor_counts(board: &amp;Board) -&gt; Vec&lt;Vec&lt;usize&gt;&gt
                     neighbors += 1;
                 }
                 //B/R
-                if c+1 &lt; width &amp;&amp; board.squares[c+1][r+1] {
+                if c+1 < width &amp;&amp; board.squares[c+1][r+1] {
                     neighbors += 1;
                 }
             }
@@ -1069,24 +1071,24 @@ enum GameState {
 
 ```rust
 //main.rs main function, after the insert_resources statements.
-    .add_state::&lt;GameState&gt;()
+    .add_state::<GameState>()
 //Replace the current single FixedUpdate system
     .add_systems(FixedUpdate, update_board.run_if(in_state(GameState::Running)))
 ```
-<p>We then can add a keyboard_system that’s similar in many ways to the button_system. For state management, we will need to modify what state the game will be in next iteration, not the state we’re currently in, so we modify the NextState&lt;GameState&gt; we receive.</p>
+<p>We then can add a keyboard_system that’s similar in many ways to the button_system. For state management, we will need to modify what state the game will be in next iteration, not the state we’re currently in, so we modify the NextState<GameState> we receive.</p>
 
 ```rust
 //main.rs
 // Below the existing button_system
 #[allow(clippy::needless_pass_by_value)]
-fn keyboard_system(keyboard_input: Res&lt;Input&lt;KeyCode&gt;&gt;, game_state: Res&lt;State&lt;GameState&gt;&gt;, mut next_game_state: ResMut&lt;NextState&lt;GameState&gt;&gt;) {
+fn keyboard_system(keyboard_input: Res<Input<KeyCode>>, game_state: Res<State<GameState>>, mut next_game_state: ResMut<NextState<GameState>>) {
     if keyboard_input.just_pressed(KeyCode::Space) {
         match game_state.to_owned() {
-            GameState::Running =&gt; {
+            GameState::Running => {
                 println!("Pausing");
                 next_game_state.set(GameState::Paused);
             },
-            GameState::Paused =&gt; {
+            GameState::Paused => {
                 println!("Running");
                 next_game_state.set(GameState::Running);
             },
@@ -1107,15 +1109,15 @@ fn keyboard_system(keyboard_input: Res&lt;Input&lt;KeyCode&gt;&gt;, game_state: 
 ```rust
 //main.rs #TODO: BMB: Add the main.rs to the medium post.
 #[allow(clippy::needless_pass_by_value)]
-fn keyboard_system(keyboard_input: Res&lt;Input&lt;KeyCode&gt;&gt;, game_state: Res&lt;State&lt;GameState&gt;&gt;, mut next_game_state: ResMut&lt;NextState&lt;GameState&gt;&gt;, 
-    mut board: ResMut&lt;Board&gt;) {
+fn keyboard_system(keyboard_input: Res<Input<KeyCode>>, game_state: Res<State<GameState>>, mut next_game_state: ResMut<NextState<GameState>>, 
+    mut board: ResMut<Board>) {
     if keyboard_input.just_pressed(KeyCode::Space) {
         match game_state.to_owned() {
-            GameState::Running =&gt; {
+            GameState::Running => {
                 println!("Pausing");
                 next_game_state.set(GameState::Paused);
             },
-            GameState::Paused =&gt; {
+            GameState::Paused => {
                 println!("Running");
                 next_game_state.set(GameState::Running);
             },
@@ -1138,7 +1140,7 @@ fn keyboard_system(keyboard_input: Res&lt;Input&lt;KeyCode&gt;&gt;, game_state: 
 //main.rs
 // After update_board
 #[allow(clippy::needless_pass_by_value)]
-fn draw_board(mut query: Query&lt;(&amp;mut BackgroundColor, &amp;GridLocation)&gt;, board: Res&lt;Board&gt;) {
+fn draw_board(mut query: Query<(&amp;mut BackgroundColor, &amp;GridLocation)>, board: Res<Board>) {
     for (mut color, grid_loc) in &amp;mut query {
         let alive = board.squares[grid_loc.column][grid_loc.row];
         if alive {
@@ -1161,7 +1163,7 @@ fn draw_board(mut query: Query&lt;(&amp;mut BackgroundColor, &amp;GridLocation)&
 <p>Now, this will cause a bit of a different behavior in our system — It will guarantee for the Update scheduled events, that the systems that are in the chained tuple will be executed in the order they are listed, so button, keyboard, then draw. This allows the board to be cleared before the board may be drawn. Out of order in this case isn’t hugely impactful as we would update on the next Update tick, which is rapid, but there are other things later that will benefit from the user input being before the drawing phase.</p><p>If you run it now you should see the board clear properly, even if paused.</p><p>Before we commit we should also remove the other spots we currently set the UX color (like in update_board). This will also allow us to prune some method parameters.</p><p>Updated update_board</p>
 
 ```rust
-fn update_board(mut query: Query&lt;&amp;GridLocation&gt;, mut board: ResMut&lt;Board&gt;) {
+fn update_board(mut query: Query<&amp;GridLocation>, mut board: ResMut<Board>) {
     //Fetch the neighbor counts.
     let neighbor_counts = get_alive_neighbor_counts(board.as_ref());
     for grid_loc in &amp;mut query {
@@ -1173,7 +1175,7 @@ fn update_board(mut query: Query&lt;&amp;GridLocation&gt;, mut board: ResMut&lt;
         if cur {
             // Live cell
             //fewer than two live neighbours dies, as if by underpopulation.
-            if n &lt; 2 {
+            if n < 2 {
                 //Underpop
                 new_state = false;
             }
@@ -1183,7 +1185,7 @@ fn update_board(mut query: Query&lt;&amp;GridLocation&gt;, mut board: ResMut&lt;
                 new_state = true;
             }
             //more than three live neighbours dies, as if by overpopulation.
-            if n &gt; 3 {
+            if n > 3 {
                 //Overpop
                 new_state = false;
             }
@@ -1199,16 +1201,16 @@ fn update_board(mut query: Query&lt;&amp;GridLocation&gt;, mut board: ResMut&lt;
         board.squares[c][r] = new_state;
     }
 }</pre><p>updated button_system</p><pre>#[allow(clippy::type_complexity)]
-fn button_system(mut interaction_query: Query&lt;
+fn button_system(mut interaction_query: Query<
     (
         &amp;Interaction,
         &amp;GridLocation,
     ),
-    (Changed&lt;Interaction&gt;, With&lt;Button&gt;),
-&gt;, mut board: ResMut&lt;Board&gt;) {
+    (Changed<Interaction>, With<Button>),
+>, mut board: ResMut<Board>) {
     for (interaction, grid_loc) in &amp;mut interaction_query {
         match *interaction {
-            Interaction::Pressed =&gt; {
+            Interaction::Pressed => {
                 let r = usize::from(grid_loc.row);
                 let c = usize::from(grid_loc.column);
                 //Get the game state.
@@ -1216,7 +1218,7 @@ fn button_system(mut interaction_query: Query&lt;
                 println!("Button pressed at ({c},{r}) -- Currently:{cur}");
                 board.squares[c][r] = !cur;
             },
-            Interaction::Hovered | Interaction::None =&gt; {},
+            Interaction::Hovered | Interaction::None => {},
         }
     }
 }
@@ -1245,7 +1247,7 @@ enum GameState {
 struct Board {
     squares_wide: u16,
     squares_high: u16,
-    squares: Vec&lt;Vec&lt;bool&gt;&gt;,
+    squares: Vec<Vec<bool>>,
 }
 
 #[derive(Component, Debug)]
@@ -1280,8 +1282,8 @@ fn main() {
             })
         )
         .insert_resource(board)
-        .insert_resource(Time::&lt;Fixed&gt;::from_seconds(UPDATE_RATE_SEC))
-        .add_state::&lt;GameState&gt;()
+        .insert_resource(Time::<Fixed>::from_seconds(UPDATE_RATE_SEC))
+        .add_state::<GameState>()
         .add_systems(FixedUpdate, update_board.run_if(in_state(GameState::Running)))
         .add_systems(Startup, initial_setup)
         .add_systems(Update, (button_system, keyboard_system, draw_board).chain())
@@ -1289,7 +1291,7 @@ fn main() {
 }
 
 #[allow(clippy::needless_pass_by_value)]
-fn initial_setup(mut commands: Commands, board: Res&lt;Board&gt;) {
+fn initial_setup(mut commands: Commands, board: Res<Board>) {
     commands.spawn(Camera2dBundle::default());
     //Button style
     let button_style = Style {
@@ -1341,16 +1343,16 @@ fn initial_setup(mut commands: Commands, board: Res&lt;Board&gt;) {
 }
 
 #[allow(clippy::type_complexity)]
-fn button_system(mut interaction_query: Query&lt;
+fn button_system(mut interaction_query: Query<
     (
         &amp;Interaction,
         &amp;GridLocation,
     ),
-    (Changed&lt;Interaction&gt;, With&lt;Button&gt;),
-&gt;, mut board: ResMut&lt;Board&gt;) {
+    (Changed<Interaction>, With<Button>),
+>, mut board: ResMut<Board>) {
     for (interaction, grid_loc) in &amp;mut interaction_query {
         match *interaction {
-            Interaction::Pressed =&gt; {
+            Interaction::Pressed => {
                 let r = usize::from(grid_loc.row);
                 let c = usize::from(grid_loc.column);
                 //Get the game state.
@@ -1358,21 +1360,21 @@ fn button_system(mut interaction_query: Query&lt;
                 println!("Button pressed at ({c},{r}) -- Currently:{cur}");
                 board.squares[c][r] = !cur;
             },
-            Interaction::Hovered | Interaction::None =&gt; {},
+            Interaction::Hovered | Interaction::None => {},
         }
     }
 }
 
 #[allow(clippy::needless_pass_by_value)]
-fn keyboard_system(keyboard_input: Res&lt;Input&lt;KeyCode&gt;&gt;, game_state: Res&lt;State&lt;GameState&gt;&gt;, mut next_game_state: ResMut&lt;NextState&lt;GameState&gt;&gt;, 
-    mut board: ResMut&lt;Board&gt;) {
+fn keyboard_system(keyboard_input: Res<Input<KeyCode>>, game_state: Res<State<GameState>>, mut next_game_state: ResMut<NextState<GameState>>, 
+    mut board: ResMut<Board>) {
     if keyboard_input.just_pressed(KeyCode::Space) {
         match game_state.to_owned() {
-            GameState::Running =&gt; {
+            GameState::Running => {
                 println!("Pausing");
                 next_game_state.set(GameState::Paused);
             },
-            GameState::Paused =&gt; {
+            GameState::Paused => {
                 println!("Running");
                 next_game_state.set(GameState::Running);
             },
@@ -1388,7 +1390,7 @@ fn keyboard_system(keyboard_input: Res&lt;Input&lt;KeyCode&gt;&gt;, game_state: 
     }
 }
 
-fn update_board(mut query: Query&lt;&amp;GridLocation&gt;, mut board: ResMut&lt;Board&gt;) {
+fn update_board(mut query: Query<&amp;GridLocation>, mut board: ResMut<Board>) {
     //Fetch the neighbor counts.
     let neighbor_counts = get_alive_neighbor_counts(board.as_ref());
     for grid_loc in &amp;mut query {
@@ -1400,7 +1402,7 @@ fn update_board(mut query: Query&lt;&amp;GridLocation&gt;, mut board: ResMut&lt;
         if cur {
             // Live cell
             //fewer than two live neighbours dies, as if by underpopulation.
-            if n &lt; 2 {
+            if n < 2 {
                 //Underpop
                 new_state = false;
             }
@@ -1410,7 +1412,7 @@ fn update_board(mut query: Query&lt;&amp;GridLocation&gt;, mut board: ResMut&lt;
                 new_state = true;
             }
             //more than three live neighbours dies, as if by overpopulation.
-            if n &gt; 3 {
+            if n > 3 {
                 //Overpop
                 new_state = false;
             }
@@ -1428,7 +1430,7 @@ fn update_board(mut query: Query&lt;&amp;GridLocation&gt;, mut board: ResMut&lt;
 }
 
 #[allow(clippy::needless_pass_by_value)]
-fn draw_board(mut query: Query&lt;(&amp;mut BackgroundColor, &amp;GridLocation)&gt;, board: Res&lt;Board&gt;) {
+fn draw_board(mut query: Query<(&amp;mut BackgroundColor, &amp;GridLocation)>, board: Res<Board>) {
     for (mut color, grid_loc) in &amp;mut query {
         let alive = board.squares[usize::from(grid_loc.column)][usize::from(grid_loc.row)];
         if alive {
@@ -1439,7 +1441,7 @@ fn draw_board(mut query: Query&lt;(&amp;mut BackgroundColor, &amp;GridLocation)&
     }
 }
 
-fn get_alive_neighbor_counts(board: &amp;Board) -&gt; Vec&lt;Vec&lt;usize&gt;&gt; {
+fn get_alive_neighbor_counts(board: &amp;Board) -> Vec<Vec<usize>> {
     let height = usize::from(board.squares_high);
     let width = usize::from(board.squares_wide);
     let mut neighbor_counts = vec![vec![0; height]; width];
@@ -1447,9 +1449,9 @@ fn get_alive_neighbor_counts(board: &amp;Board) -&gt; Vec&lt;Vec&lt;usize&gt;&gt
         for (r, item) in  row.iter_mut().enumerate() {
             let mut neighbors = 0;
             //Top
-            if r &gt; 0 {
+            if r > 0 {
                 //T/L
-                if c &gt; 0 &amp;&amp; board.squares[c-1][r-1] {
+                if c > 0 &amp;&amp; board.squares[c-1][r-1] {
                     neighbors += 1;
                 }
                 //T/C
@@ -1457,22 +1459,22 @@ fn get_alive_neighbor_counts(board: &amp;Board) -&gt; Vec&lt;Vec&lt;usize&gt;&gt
                     neighbors += 1;
                 }
                 //T/R
-                if c+1 &lt; width &amp;&amp; board.squares[c+1][r-1] {
+                if c+1 < width &amp;&amp; board.squares[c+1][r-1] {
                     neighbors += 1;
                 }
             }
             //Left
-            if c &gt; 0 &amp;&amp; board.squares[c-1][r] {
+            if c > 0 &amp;&amp; board.squares[c-1][r] {
                 neighbors += 1;
             }
             //Right
-            if c+1 &lt; width &amp;&amp; board.squares[c+1][r] {
+            if c+1 < width &amp;&amp; board.squares[c+1][r] {
                 neighbors += 1;
             }
             //Bottom
-            if r+1 &lt; height {
+            if r+1 < height {
                 //B/L
-                if c &gt; 0 &amp;&amp; board.squares[c-1][r+1] {
+                if c > 0 &amp;&amp; board.squares[c-1][r+1] {
                     neighbors += 1;
                 }
                 //B/C
@@ -1480,7 +1482,7 @@ fn get_alive_neighbor_counts(board: &amp;Board) -&gt; Vec&lt;Vec&lt;usize&gt;&gt
                     neighbors += 1;
                 }
                 //B/R
-                if c+1 &lt; width &amp;&amp; board.squares[c+1][r+1] {
+                if c+1 < width &amp;&amp; board.squares[c+1][r+1] {
                     neighbors += 1;
                 }
             }
@@ -1503,7 +1505,7 @@ fn get_alive_neighbor_counts(board: &amp;Board) -&gt; Vec&lt;Vec&lt;usize&gt;&gt
 struct Board {
     squares_wide: u16,
     squares_high: u16,
-    squares: Vec&lt;Vec&lt;bool&gt;&gt;,
+    squares: Vec<Vec<bool>>,
     alive_squares: usize,
 }
 
@@ -1546,8 +1548,8 @@ resolution: (window_width, window_height).into(),
 //main.rs
 //Update initial_setup method signature to also take in the GameMetadata.
 #[allow(clippy::needless_pass_by_value)]
-fn initial_setup(mut commands: Commands, board: Res&lt;Board&gt;, metadata: ResMut&lt;GameMetadata&gt;) {
-//&lt;...&gt;
+fn initial_setup(mut commands: Commands, board: Res<Board>, metadata: ResMut<GameMetadata>) {
+//<...>
 // replace the spawn of the prior game grid layout.
     commands
         .spawn(NodeBundle {
@@ -1658,14 +1660,14 @@ fn initial_setup(mut commands: Commands, board: Res&lt;Board&gt;, metadata: ResM
 //main.rs
 // Below the keyboard system
 #[allow(clippy::type_complexity, clippy::needless_pass_by_value)]
-fn status_bar_text_update(mut text_params: ParamSet&lt;(Query&lt;&amp;mut Text, With&lt;GameStateText&gt;&gt;, Query&lt;&amp;mut Text, With&lt;IterationText&gt;&gt;)&gt;, board: Res&lt;Board&gt;,
-    metadata: Res&lt;GameMetadata&gt;, game_state: Res&lt;State&lt;GameState&gt;&gt;) {
+fn status_bar_text_update(mut text_params: ParamSet<(Query<&amp;mut Text, With<GameStateText>>, Query<&amp;mut Text, With<IterationText>>)>, board: Res<Board>,
+    metadata: Res<GameMetadata>, game_state: Res<State<GameState>>) {
     let mut game_state_query = text_params.p0();
     match game_state.to_owned() {
-        GameState::Running =&gt; {
+        GameState::Running => {
             game_state_query.single_mut().sections[0].value = "Running: [space] to pause, [c] to clear.".to_string();
         },
-        GameState::Paused =&gt; {
+        GameState::Paused => {
             game_state_query.single_mut().sections[0].value = "Paused: [space] to resume, [c] to clear, [n] for next.".to_string();
         },
     }
@@ -1683,7 +1685,7 @@ fn status_bar_text_update(mut text_params: ParamSet&lt;(Query&lt;&amp;mut Text, 
 //main.rs
 // Add the new metadata resource to update_board.
 // Count up the alive squares and increment the iterations.
-fn update_board(mut query: Query&lt;&amp;GridLocation&gt;, mut board: ResMut&lt;Board&gt;, mut metadata: ResMut&lt;GameMetadata&gt;) {
+fn update_board(mut query: Query<&amp;GridLocation>, mut board: ResMut<Board>, mut metadata: ResMut<GameMetadata>) {
     //Fetch the neighbor counts.
     let neighbor_counts = get_alive_neighbor_counts(board.as_ref());
     let mut alive_count = 0;
@@ -1696,7 +1698,7 @@ fn update_board(mut query: Query&lt;&amp;GridLocation&gt;, mut board: ResMut&lt;
         if cur {
             // Live cell
             //fewer than two live neighbours dies, as if by underpopulation.
-            if n &lt; 2 {
+            if n < 2 {
                 //Underpop
                 new_state = false;
             }
@@ -1706,7 +1708,7 @@ fn update_board(mut query: Query&lt;&amp;GridLocation&gt;, mut board: ResMut&lt;
                 new_state = true;
             }
             //more than three live neighbours dies, as if by overpopulation.
-            if n &gt; 3 {
+            if n > 3 {
                 //Overpop
                 new_state = false;
             }
@@ -1730,16 +1732,16 @@ fn update_board(mut query: Query&lt;&amp;GridLocation&gt;, mut board: ResMut&lt;
 
 //Modify the button system to mod the alive count
 #[allow(clippy::type_complexity)]
-fn button_system(mut interaction_query: Query&lt;
+fn button_system(mut interaction_query: Query<
     (
         &amp;Interaction,
         &amp;GridLocation,
     ),
-    (Changed&lt;Interaction&gt;, With&lt;Button&gt;),
-&gt;, mut board: ResMut&lt;Board&gt;) {
+    (Changed<Interaction>, With<Button>),
+>, mut board: ResMut<Board>) {
     for (interaction, grid_loc) in &amp;mut interaction_query {
         match *interaction {
-            Interaction::Pressed =&gt; {
+            Interaction::Pressed => {
                 let r = usize::from(grid_loc.row);
                 let c = usize::from(grid_loc.column);
                 //Get the game state.
@@ -1752,22 +1754,22 @@ fn button_system(mut interaction_query: Query&lt;
                 println!("Button pressed at ({c},{r}) -- Currently:{cur}");
                 board.squares[c][r] = !cur;
             },
-            Interaction::Hovered | Interaction::None =&gt; {},
+            Interaction::Hovered | Interaction::None => {},
         }
     }
 }
 
 //And the keyboard_system to zero the alive_squares on clear.
 #[allow(clippy::needless_pass_by_value)]
-fn keyboard_system(keyboard_input: Res&lt;Input&lt;KeyCode&gt;&gt;, game_state: Res&lt;State&lt;GameState&gt;&gt;, mut next_game_state: ResMut&lt;NextState&lt;GameState&gt;&gt;, 
-    mut board: ResMut&lt;Board&gt;) {
+fn keyboard_system(keyboard_input: Res<Input<KeyCode>>, game_state: Res<State<GameState>>, mut next_game_state: ResMut<NextState<GameState>>, 
+    mut board: ResMut<Board>) {
     if keyboard_input.just_pressed(KeyCode::Space) {
         match game_state.to_owned() {
-            GameState::Running =&gt; {
+            GameState::Running => {
                 println!("Pausing");
                 next_game_state.set(GameState::Paused);
             },
-            GameState::Paused =&gt; {
+            GameState::Paused => {
                 println!("Running");
                 next_game_state.set(GameState::Running);
             },
@@ -1809,7 +1811,7 @@ enum GameState {
 struct Board {
     squares_wide: u16,
     squares_high: u16,
-    squares: Vec&lt;Vec&lt;bool&gt;&gt;,
+    squares: Vec<Vec<bool>>,
     alive_squares: usize,
 }
 
@@ -1858,8 +1860,8 @@ fn main() {
         )
         .insert_resource(board)
         .insert_resource(game_metadata)
-        .insert_resource(Time::&lt;Fixed&gt;::from_seconds(UPDATE_RATE_SEC))
-        .add_state::&lt;GameState&gt;()
+        .insert_resource(Time::<Fixed>::from_seconds(UPDATE_RATE_SEC))
+        .add_state::<GameState>()
         .add_systems(FixedUpdate, update_board.run_if(in_state(GameState::Running)))
         .add_systems(Startup, initial_setup)
         .add_systems(Update, (button_system, keyboard_system, draw_board, status_bar_text_update).chain())
@@ -1867,7 +1869,7 @@ fn main() {
 }
 
 #[allow(clippy::needless_pass_by_value)]
-fn initial_setup(mut commands: Commands, board: Res&lt;Board&gt;, metadata: ResMut&lt;GameMetadata&gt;) {
+fn initial_setup(mut commands: Commands, board: Res<Board>, metadata: ResMut<GameMetadata>) {
     commands.spawn(Camera2dBundle::default());
     //Button style
     let button_style = Style {
@@ -1974,16 +1976,16 @@ fn initial_setup(mut commands: Commands, board: Res&lt;Board&gt;, metadata: ResM
 }
 
 #[allow(clippy::type_complexity)]
-fn button_system(mut interaction_query: Query&lt;
+fn button_system(mut interaction_query: Query<
     (
         &amp;Interaction,
         &amp;GridLocation,
     ),
-    (Changed&lt;Interaction&gt;, With&lt;Button&gt;),
-&gt;, mut board: ResMut&lt;Board&gt;) {
+    (Changed<Interaction>, With<Button>),
+>, mut board: ResMut<Board>) {
     for (interaction, grid_loc) in &amp;mut interaction_query {
         match *interaction {
-            Interaction::Pressed =&gt; {
+            Interaction::Pressed => {
                 let r = usize::from(grid_loc.row);
                 let c = usize::from(grid_loc.column);
                 //Get the game state.
@@ -1996,21 +1998,21 @@ fn button_system(mut interaction_query: Query&lt;
                 println!("Button pressed at ({c},{r}) -- Currently:{cur}");
                 board.squares[c][r] = !cur;
             },
-            Interaction::Hovered | Interaction::None =&gt; {},
+            Interaction::Hovered | Interaction::None => {},
         }
     }
 }
 
 #[allow(clippy::needless_pass_by_value)]
-fn keyboard_system(keyboard_input: Res&lt;Input&lt;KeyCode&gt;&gt;, game_state: Res&lt;State&lt;GameState&gt;&gt;, mut next_game_state: ResMut&lt;NextState&lt;GameState&gt;&gt;, 
-    mut board: ResMut&lt;Board&gt;) {
+fn keyboard_system(keyboard_input: Res<Input<KeyCode>>, game_state: Res<State<GameState>>, mut next_game_state: ResMut<NextState<GameState>>, 
+    mut board: ResMut<Board>) {
     if keyboard_input.just_pressed(KeyCode::Space) {
         match game_state.to_owned() {
-            GameState::Running =&gt; {
+            GameState::Running => {
                 println!("Pausing");
                 next_game_state.set(GameState::Paused);
             },
-            GameState::Paused =&gt; {
+            GameState::Paused => {
                 println!("Running");
                 next_game_state.set(GameState::Running);
             },
@@ -2028,14 +2030,14 @@ fn keyboard_system(keyboard_input: Res&lt;Input&lt;KeyCode&gt;&gt;, game_state: 
 }
 
 #[allow(clippy::type_complexity, clippy::needless_pass_by_value)]
-fn status_bar_text_update(mut text_params: ParamSet&lt;(Query&lt;&amp;mut Text, With&lt;GameStateText&gt;&gt;, Query&lt;&amp;mut Text, With&lt;IterationText&gt;&gt;)&gt;, board: Res&lt;Board&gt;,
-    metadata: Res&lt;GameMetadata&gt;, game_state: Res&lt;State&lt;GameState&gt;&gt;) {
+fn status_bar_text_update(mut text_params: ParamSet<(Query<&amp;mut Text, With<GameStateText>>, Query<&amp;mut Text, With<IterationText>>)>, board: Res<Board>,
+    metadata: Res<GameMetadata>, game_state: Res<State<GameState>>) {
     let mut game_state_query = text_params.p0();
     match game_state.to_owned() {
-        GameState::Running =&gt; {
+        GameState::Running => {
             game_state_query.single_mut().sections[0].value = "Running: [space] to pause, [c] to clear.".to_string();
         },
-        GameState::Paused =&gt; {
+        GameState::Paused => {
             game_state_query.single_mut().sections[0].value = "Paused: [space] to resume, [c] to clear, [n] for next.".to_string();
         },
     }
@@ -2044,7 +2046,7 @@ fn status_bar_text_update(mut text_params: ParamSet&lt;(Query&lt;&amp;mut Text, 
     iter_state_query.single_mut().sections[0].value = new_text;
 }
 
-fn update_board(mut query: Query&lt;&amp;GridLocation&gt;, mut board: ResMut&lt;Board&gt;, mut metadata: ResMut&lt;GameMetadata&gt;) {
+fn update_board(mut query: Query<&amp;GridLocation>, mut board: ResMut<Board>, mut metadata: ResMut<GameMetadata>) {
     //Fetch the neighbor counts.
     let neighbor_counts = get_alive_neighbor_counts(board.as_ref());
     let mut alive_count = 0;
@@ -2057,7 +2059,7 @@ fn update_board(mut query: Query&lt;&amp;GridLocation&gt;, mut board: ResMut&lt;
         if cur {
             // Live cell
             //fewer than two live neighbours dies, as if by underpopulation.
-            if n &lt; 2 {
+            if n < 2 {
                 //Underpop
                 new_state = false;
             }
@@ -2067,7 +2069,7 @@ fn update_board(mut query: Query&lt;&amp;GridLocation&gt;, mut board: ResMut&lt;
                 new_state = true;
             }
             //more than three live neighbours dies, as if by overpopulation.
-            if n &gt; 3 {
+            if n > 3 {
                 //Overpop
                 new_state = false;
             }
@@ -2090,7 +2092,7 @@ fn update_board(mut query: Query&lt;&amp;GridLocation&gt;, mut board: ResMut&lt;
 }
 
 #[allow(clippy::needless_pass_by_value)]
-fn draw_board(mut query: Query&lt;(&amp;mut BackgroundColor, &amp;GridLocation)&gt;, board: Res&lt;Board&gt;) {
+fn draw_board(mut query: Query<(&amp;mut BackgroundColor, &amp;GridLocation)>, board: Res<Board>) {
     for (mut color, grid_loc) in &amp;mut query {
         let alive = board.squares[usize::from(grid_loc.column)][usize::from(grid_loc.row)];
         if alive {
@@ -2101,7 +2103,7 @@ fn draw_board(mut query: Query&lt;(&amp;mut BackgroundColor, &amp;GridLocation)&
     }
 }
 
-fn get_alive_neighbor_counts(board: &amp;Board) -&gt; Vec&lt;Vec&lt;usize&gt;&gt; {
+fn get_alive_neighbor_counts(board: &amp;Board) -> Vec<Vec<usize>> {
     let height = usize::from(board.squares_high);
     let width = usize::from(board.squares_wide);
     let mut neighbor_counts = vec![vec![0; height]; width];
@@ -2109,9 +2111,9 @@ fn get_alive_neighbor_counts(board: &amp;Board) -&gt; Vec&lt;Vec&lt;usize&gt;&gt
         for (r, item) in  row.iter_mut().enumerate() {
             let mut neighbors = 0;
             //Top
-            if r &gt; 0 {
+            if r > 0 {
                 //T/L
-                if c &gt; 0 &amp;&amp; board.squares[c-1][r-1] {
+                if c > 0 &amp;&amp; board.squares[c-1][r-1] {
                     neighbors += 1;
                 }
                 //T/C
@@ -2119,22 +2121,22 @@ fn get_alive_neighbor_counts(board: &amp;Board) -&gt; Vec&lt;Vec&lt;usize&gt;&gt
                     neighbors += 1;
                 }
                 //T/R
-                if c+1 &lt; width &amp;&amp; board.squares[c+1][r-1] {
+                if c+1 < width &amp;&amp; board.squares[c+1][r-1] {
                     neighbors += 1;
                 }
             }
             //Left
-            if c &gt; 0 &amp;&amp; board.squares[c-1][r] {
+            if c > 0 &amp;&amp; board.squares[c-1][r] {
                 neighbors += 1;
             }
             //Right
-            if c+1 &lt; width &amp;&amp; board.squares[c+1][r] {
+            if c+1 < width &amp;&amp; board.squares[c+1][r] {
                 neighbors += 1;
             }
             //Bottom
-            if r+1 &lt; height {
+            if r+1 < height {
                 //B/L
-                if c &gt; 0 &amp;&amp; board.squares[c-1][r+1] {
+                if c > 0 &amp;&amp; board.squares[c-1][r+1] {
                     neighbors += 1;
                 }
                 //B/C
@@ -2142,7 +2144,7 @@ fn get_alive_neighbor_counts(board: &amp;Board) -&gt; Vec&lt;Vec&lt;usize&gt;&gt
                     neighbors += 1;
                 }
                 //B/R
-                if c+1 &lt; width &amp;&amp; board.squares[c+1][r+1] {
+                if c+1 < width &amp;&amp; board.squares[c+1][r+1] {
                     neighbors += 1;
                 }
             }
@@ -2178,7 +2180,7 @@ struct StatusBarNeedsDrawingEvent;
 ```rust
 //main.rs
 // before button_system
-fn game_tick_timer(mut game_board_update_needed: EventWriter&lt;BoardNeedsUpdateEvent&gt;) {
+fn game_tick_timer(mut game_board_update_needed: EventWriter<BoardNeedsUpdateEvent>) {
     game_board_update_needed.send_default();
 }
 ```
@@ -2200,11 +2202,11 @@ fn game_tick_timer(mut game_board_update_needed: EventWriter&lt;BoardNeedsUpdate
         )
         .insert_resource(board)
         .insert_resource(game_metadata)
-        .insert_resource(Time::&lt;Fixed&gt;::from_seconds(UPDATE_RATE_SEC))
-        .add_event::&lt;BoardNeedsUpdateEvent&gt;()
-        .add_event::&lt;BoardNeedsDrawingEvent&gt;()
-        .add_event::&lt;StatusBarNeedsDrawingEvent&gt;()
-        .add_state::&lt;GameState&gt;()
+        .insert_resource(Time::<Fixed>::from_seconds(UPDATE_RATE_SEC))
+        .add_event::<BoardNeedsUpdateEvent>()
+        .add_event::<BoardNeedsDrawingEvent>()
+        .add_event::<StatusBarNeedsDrawingEvent>()
+        .add_state::<GameState>()
         .add_systems(FixedUpdate, game_tick_timer.run_if(in_state(GameState::Running)))
         .add_systems(Startup, initial_setup)
         .add_systems(Update, (button_system, keyboard_system, update_board, draw_board, status_bar_text_update).chain())
@@ -2218,17 +2220,17 @@ fn game_tick_timer(mut game_board_update_needed: EventWriter&lt;BoardNeedsUpdate
 //main.rs
 //Update button_system
 #[allow(clippy::type_complexity)]
-fn button_system(mut interaction_query: Query&lt;
+fn button_system(mut interaction_query: Query<
     (
         &amp;Interaction,
         &amp;GridLocation,
     ),
-    (Changed&lt;Interaction&gt;, With&lt;Button&gt;),
-&gt;, mut board: ResMut&lt;Board&gt;, mut board_needs_drawing: EventWriter&lt;BoardNeedsDrawingEvent&gt;,
-    mut status_bar_needs_update: EventWriter&lt;StatusBarNeedsDrawingEvent&gt;) {
+    (Changed<Interaction>, With<Button>),
+>, mut board: ResMut<Board>, mut board_needs_drawing: EventWriter<BoardNeedsDrawingEvent>,
+    mut status_bar_needs_update: EventWriter<StatusBarNeedsDrawingEvent>) {
     for (interaction, grid_loc) in &amp;mut interaction_query {
         match *interaction {
-            Interaction::Pressed =&gt; {
+            Interaction::Pressed => {
                 let r = grid_loc.row;
                 let c = grid_loc.column;
                 //Get the game state.
@@ -2243,21 +2245,21 @@ fn button_system(mut interaction_query: Query&lt;
                 board_needs_drawing.send_default();
                 status_bar_needs_update.send_default();
             },
-            Interaction::Hovered | Interaction::None =&gt; {},
+            Interaction::Hovered | Interaction::None => {},
         }
     }
 }
 
 #[allow(clippy::needless_pass_by_value)]
-fn keyboard_system(keyboard_input: Res&lt;Input&lt;KeyCode&gt;&gt;, game_state: Res&lt;State&lt;GameState&gt;&gt;, mut next_game_state: ResMut&lt;NextState&lt;GameState&gt;&gt;,
-    mut board: ResMut&lt;Board&gt;, mut board_needs_drawing_events: EventWriter&lt;BoardNeedsDrawingEvent&gt;,
-    mut board_update_events: EventWriter&lt;BoardNeedsUpdateEvent&gt;, mut status_bar_needs_redraw: EventWriter&lt;StatusBarNeedsDrawingEvent&gt;) {
+fn keyboard_system(keyboard_input: Res<Input<KeyCode>>, game_state: Res<State<GameState>>, mut next_game_state: ResMut<NextState<GameState>>,
+    mut board: ResMut<Board>, mut board_needs_drawing_events: EventWriter<BoardNeedsDrawingEvent>,
+    mut board_update_events: EventWriter<BoardNeedsUpdateEvent>, mut status_bar_needs_redraw: EventWriter<StatusBarNeedsDrawingEvent>) {
     if keyboard_input.just_pressed(KeyCode::Space) {
         match game_state.to_owned() {
-            GameState::Running =&gt; {
+            GameState::Running => {
                 next_game_state.set(GameState::Paused);
             },
-            GameState::Paused =&gt; {
+            GameState::Paused => {
                 next_game_state.set(GameState::Running);
             },
         }
@@ -2293,8 +2295,8 @@ fn keyboard_system(keyboard_input: Res&lt;Input&lt;KeyCode&gt;&gt;, game_state: 
 // Change GameState to be the next one, gate the execution of the function on an event,
 // Change the Pause text to also include 'N' key instructions.
 #[allow(clippy::type_complexity, clippy::needless_pass_by_value)]
-fn status_bar_text_update(mut text_params: ParamSet&lt;(Query&lt;&amp;mut Text, With&lt;GameStateText&gt;&gt;, Query&lt;&amp;mut Text, With&lt;IterationText&gt;&gt;)&gt;, board: Res&lt;Board&gt;,
-    metadata: Res&lt;GameMetadata&gt;, next_game_state: Res&lt;NextState&lt;GameState&gt;&gt;, mut status_bar_needs_redraw: EventReader&lt;StatusBarNeedsDrawingEvent&gt;) {
+fn status_bar_text_update(mut text_params: ParamSet<(Query<&amp;mut Text, With<GameStateText>>, Query<&amp;mut Text, With<IterationText>>)>, board: Res<Board>,
+    metadata: Res<GameMetadata>, next_game_state: Res<NextState<GameState>>, mut status_bar_needs_redraw: EventReader<StatusBarNeedsDrawingEvent>) {
     if status_bar_needs_redraw.is_empty() {
         return;
     }
@@ -2303,10 +2305,10 @@ fn status_bar_text_update(mut text_params: ParamSet&lt;(Query&lt;&amp;mut Text, 
     let game_state = next_game_state.0.as_ref().unwrap_or(&amp;GameState::Running);
     let mut game_state_query = text_params.p0();
     match game_state {
-        GameState::Running =&gt; {
+        GameState::Running => {
             game_state_query.single_mut().sections[0].value = "Running: [space] to pause, [c] to clear.".to_string();
         },
-        GameState::Paused =&gt; {
+        GameState::Paused => {
             game_state_query.single_mut().sections[0].value = "Paused: [space] to resume, [c] to clear, [n] for next.".to_string();
         },
     }
@@ -2319,14 +2321,14 @@ fn status_bar_text_update(mut text_params: ParamSet&lt;(Query&lt;&amp;mut Text, 
 
 ```rust
 //main.rs
-fn update_board(mut query: Query&lt;&amp;GridLocation&gt;, mut board: ResMut&lt;Board&gt;, mut metadata: ResMut&lt;GameMetadata&gt;,
-    mut board_update_events: EventReader&lt;BoardNeedsUpdateEvent&gt;, mut board_needs_draw_event: EventWriter&lt;BoardNeedsDrawingEvent&gt;,
-    mut status_bar_needs_update: EventWriter&lt;StatusBarNeedsDrawingEvent&gt;) {
+fn update_board(mut query: Query<&amp;GridLocation>, mut board: ResMut<Board>, mut metadata: ResMut<GameMetadata>,
+    mut board_update_events: EventReader<BoardNeedsUpdateEvent>, mut board_needs_draw_event: EventWriter<BoardNeedsDrawingEvent>,
+    mut status_bar_needs_update: EventWriter<StatusBarNeedsDrawingEvent>) {
     if board_update_events.is_empty() {
         return;
     }
     board_update_events.clear();
-    //&lt;...&gt;
+    //<...>
     //After we increment metadata, fire off two events.
     board_needs_draw_event.send_default();
     status_bar_needs_update.send_default();
@@ -2338,7 +2340,7 @@ fn update_board(mut query: Query&lt;&amp;GridLocation&gt;, mut board: ResMut&lt;
 //main.rs
 // Update to draw_board to do work on event presence.
 #[allow(clippy::needless_pass_by_value)]
-fn draw_board(mut query: Query&lt;(&amp;mut BackgroundColor, &amp;GridLocation)&gt;, board: Res&lt;Board&gt;, mut board_needs_draw_events: EventReader&lt;BoardNeedsDrawingEvent&gt;) {
+fn draw_board(mut query: Query<(&amp;mut BackgroundColor, &amp;GridLocation)>, board: Res<Board>, mut board_needs_draw_events: EventReader<BoardNeedsDrawingEvent>) {
     if board_needs_draw_events.is_empty() {
         return;
     }
@@ -2393,7 +2395,7 @@ enum GameState {
 struct Board {
     squares_wide: u16,
     squares_high: u16,
-    squares: Vec&lt;Vec&lt;bool&gt;&gt;,
+    squares: Vec<Vec<bool>>,
     alive_squares: usize,
 }
 
@@ -2451,11 +2453,11 @@ fn main() {
         )
         .insert_resource(board)
         .insert_resource(game_metadata)
-        .insert_resource(Time::&lt;Fixed&gt;::from_seconds(UPDATE_RATE_SEC))
-        .add_event::&lt;BoardNeedsUpdateEvent&gt;()
-        .add_event::&lt;BoardNeedsDrawingEvent&gt;()
-        .add_event::&lt;StatusBarNeedsDrawingEvent&gt;()
-        .add_state::&lt;GameState&gt;()
+        .insert_resource(Time::<Fixed>::from_seconds(UPDATE_RATE_SEC))
+        .add_event::<BoardNeedsUpdateEvent>()
+        .add_event::<BoardNeedsDrawingEvent>()
+        .add_event::<StatusBarNeedsDrawingEvent>()
+        .add_state::<GameState>()
         .add_systems(FixedUpdate, game_tick_timer.run_if(in_state(GameState::Running)))
         .add_systems(Startup, initial_setup)
         .add_systems(Update, (button_system, keyboard_system, update_board, draw_board, status_bar_text_update).chain())
@@ -2463,7 +2465,7 @@ fn main() {
 }
 
 #[allow(clippy::needless_pass_by_value)]
-fn initial_setup(mut commands: Commands, board: Res&lt;Board&gt;, metadata: ResMut&lt;GameMetadata&gt;) {
+fn initial_setup(mut commands: Commands, board: Res<Board>, metadata: ResMut<GameMetadata>) {
     commands.spawn(Camera2dBundle::default());
     //Button style
     let button_style = Style {
@@ -2569,22 +2571,22 @@ fn initial_setup(mut commands: Commands, board: Res&lt;Board&gt;, metadata: ResM
         });
 }
 
-fn game_tick_timer(mut game_board_update_needed: EventWriter&lt;BoardNeedsUpdateEvent&gt;) {
+fn game_tick_timer(mut game_board_update_needed: EventWriter<BoardNeedsUpdateEvent>) {
     game_board_update_needed.send_default();
 }
 
 #[allow(clippy::type_complexity)]
-fn button_system(mut interaction_query: Query&lt;
+fn button_system(mut interaction_query: Query<
     (
         &amp;Interaction,
         &amp;GridLocation,
     ),
-    (Changed&lt;Interaction&gt;, With&lt;Button&gt;),
-&gt;, mut board: ResMut&lt;Board&gt;, mut board_needs_drawing: EventWriter&lt;BoardNeedsDrawingEvent&gt;,
-    mut status_bar_needs_update: EventWriter&lt;StatusBarNeedsDrawingEvent&gt;) {
+    (Changed<Interaction>, With<Button>),
+>, mut board: ResMut<Board>, mut board_needs_drawing: EventWriter<BoardNeedsDrawingEvent>,
+    mut status_bar_needs_update: EventWriter<StatusBarNeedsDrawingEvent>) {
     for (interaction, grid_loc) in &amp;mut interaction_query {
         match *interaction {
-            Interaction::Pressed =&gt; {
+            Interaction::Pressed => {
                 let r = usize::from(grid_loc.row);
                 let c = usize::from(grid_loc.column);
                 //Get the game state.
@@ -2599,22 +2601,22 @@ fn button_system(mut interaction_query: Query&lt;
                 board_needs_drawing.send_default();
                 status_bar_needs_update.send_default();
             },
-            Interaction::Hovered | Interaction::None =&gt; {},
+            Interaction::Hovered | Interaction::None => {},
         }
     }
 }
 
 #[allow(clippy::needless_pass_by_value)]
-fn keyboard_system(keyboard_input: Res&lt;Input&lt;KeyCode&gt;&gt;, game_state: Res&lt;State&lt;GameState&gt;&gt;, mut next_game_state: ResMut&lt;NextState&lt;GameState&gt;&gt;, 
-    mut board: ResMut&lt;Board&gt;, mut board_needs_drawing_events: EventWriter&lt;BoardNeedsDrawingEvent&gt;,
-    mut board_update_events: EventWriter&lt;BoardNeedsUpdateEvent&gt;, mut status_bar_needs_redraw: EventWriter&lt;StatusBarNeedsDrawingEvent&gt;) {
+fn keyboard_system(keyboard_input: Res<Input<KeyCode>>, game_state: Res<State<GameState>>, mut next_game_state: ResMut<NextState<GameState>>, 
+    mut board: ResMut<Board>, mut board_needs_drawing_events: EventWriter<BoardNeedsDrawingEvent>,
+    mut board_update_events: EventWriter<BoardNeedsUpdateEvent>, mut status_bar_needs_redraw: EventWriter<StatusBarNeedsDrawingEvent>) {
     if keyboard_input.just_pressed(KeyCode::Space) {
         match game_state.to_owned() {
-            GameState::Running =&gt; {
+            GameState::Running => {
                 println!("Pausing");
                 next_game_state.set(GameState::Paused);
             },
-            GameState::Paused =&gt; {
+            GameState::Paused => {
                 println!("Running");
                 next_game_state.set(GameState::Running);
             },
@@ -2644,8 +2646,8 @@ fn keyboard_system(keyboard_input: Res&lt;Input&lt;KeyCode&gt;&gt;, game_state: 
 }
 
 #[allow(clippy::type_complexity, clippy::needless_pass_by_value)]
-fn status_bar_text_update(mut text_params: ParamSet&lt;(Query&lt;&amp;mut Text, With&lt;GameStateText&gt;&gt;, Query&lt;&amp;mut Text, With&lt;IterationText&gt;&gt;)&gt;, board: Res&lt;Board&gt;,
-    metadata: Res&lt;GameMetadata&gt;, next_game_state: Res&lt;NextState&lt;GameState&gt;&gt;, mut status_bar_needs_redraw: EventReader&lt;StatusBarNeedsDrawingEvent&gt;) {
+fn status_bar_text_update(mut text_params: ParamSet<(Query<&amp;mut Text, With<GameStateText>>, Query<&amp;mut Text, With<IterationText>>)>, board: Res<Board>,
+    metadata: Res<GameMetadata>, next_game_state: Res<NextState<GameState>>, mut status_bar_needs_redraw: EventReader<StatusBarNeedsDrawingEvent>) {
     if status_bar_needs_redraw.is_empty() {
         return;
     }
@@ -2654,10 +2656,10 @@ fn status_bar_text_update(mut text_params: ParamSet&lt;(Query&lt;&amp;mut Text, 
     let game_state = next_game_state.0.as_ref().unwrap_or(&amp;GameState::Running);
     let mut game_state_query = text_params.p0();
     match game_state {
-        GameState::Running =&gt; {
+        GameState::Running => {
             game_state_query.single_mut().sections[0].value = "Running: [space] to pause, [c] to clear.".to_string();
         },
-        GameState::Paused =&gt; {
+        GameState::Paused => {
             game_state_query.single_mut().sections[0].value = "Paused: [space] to resume, [c] to clear, [n] for next.".to_string();
         },
     }
@@ -2668,9 +2670,9 @@ fn status_bar_text_update(mut text_params: ParamSet&lt;(Query&lt;&amp;mut Text, 
 
 
 
-fn update_board(mut query: Query&lt;&amp;GridLocation&gt;, mut board: ResMut&lt;Board&gt;, mut metadata: ResMut&lt;GameMetadata&gt;,
-    mut board_update_events: EventReader&lt;BoardNeedsUpdateEvent&gt;, mut board_needs_draw_event: EventWriter&lt;BoardNeedsDrawingEvent&gt;,
-    mut status_bar_needs_update: EventWriter&lt;StatusBarNeedsDrawingEvent&gt;) {
+fn update_board(mut query: Query<&amp;GridLocation>, mut board: ResMut<Board>, mut metadata: ResMut<GameMetadata>,
+    mut board_update_events: EventReader<BoardNeedsUpdateEvent>, mut board_needs_draw_event: EventWriter<BoardNeedsDrawingEvent>,
+    mut status_bar_needs_update: EventWriter<StatusBarNeedsDrawingEvent>) {
     //Fetch the neighbor counts.
     if board_update_events.is_empty() {
         return;
@@ -2687,7 +2689,7 @@ fn update_board(mut query: Query&lt;&amp;GridLocation&gt;, mut board: ResMut&lt;
         if cur {
             // Live cell
             //fewer than two live neighbours dies, as if by underpopulation.
-            if n &lt; 2 {
+            if n < 2 {
                 //Underpop
                 new_state = false;
             }
@@ -2697,7 +2699,7 @@ fn update_board(mut query: Query&lt;&amp;GridLocation&gt;, mut board: ResMut&lt;
                 new_state = true;
             }
             //more than three live neighbours dies, as if by overpopulation.
-            if n &gt; 3 {
+            if n > 3 {
                 //Overpop
                 new_state = false;
             }
@@ -2722,7 +2724,7 @@ fn update_board(mut query: Query&lt;&amp;GridLocation&gt;, mut board: ResMut&lt;
 }
 
 #[allow(clippy::needless_pass_by_value)]
-fn draw_board(mut query: Query&lt;(&amp;mut BackgroundColor, &amp;GridLocation)&gt;, board: Res&lt;Board&gt;, mut board_needs_draw_events: EventReader&lt;BoardNeedsDrawingEvent&gt;) {
+fn draw_board(mut query: Query<(&amp;mut BackgroundColor, &amp;GridLocation)>, board: Res<Board>, mut board_needs_draw_events: EventReader<BoardNeedsDrawingEvent>) {
     if board_needs_draw_events.is_empty() {
         return;
     }
@@ -2737,7 +2739,7 @@ fn draw_board(mut query: Query&lt;(&amp;mut BackgroundColor, &amp;GridLocation)&
     }
 }
 
-fn get_alive_neighbor_counts(board: &amp;Board) -&gt; Vec&lt;Vec&lt;usize&gt;&gt; {
+fn get_alive_neighbor_counts(board: &amp;Board) -> Vec<Vec<usize>> {
     let height = usize::from(board.squares_high);
     let width = usize::from(board.squares_wide);
     let mut neighbor_counts = vec![vec![0; height]; width];
@@ -2745,9 +2747,9 @@ fn get_alive_neighbor_counts(board: &amp;Board) -&gt; Vec&lt;Vec&lt;usize&gt;&gt
         for (r, item) in  row.iter_mut().enumerate() {
             let mut neighbors = 0;
             //Top
-            if r &gt; 0 {
+            if r > 0 {
                 //T/L
-                if c &gt; 0 &amp;&amp; board.squares[c-1][r-1] {
+                if c > 0 &amp;&amp; board.squares[c-1][r-1] {
                     neighbors += 1;
                 }
                 //T/C
@@ -2755,22 +2757,22 @@ fn get_alive_neighbor_counts(board: &amp;Board) -&gt; Vec&lt;Vec&lt;usize&gt;&gt
                     neighbors += 1;
                 }
                 //T/R
-                if c+1 &lt; width &amp;&amp; board.squares[c+1][r-1] {
+                if c+1 < width &amp;&amp; board.squares[c+1][r-1] {
                     neighbors += 1;
                 }
             }
             //Left
-            if c &gt; 0 &amp;&amp; board.squares[c-1][r] {
+            if c > 0 &amp;&amp; board.squares[c-1][r] {
                 neighbors += 1;
             }
             //Right
-            if c+1 &lt; width &amp;&amp; board.squares[c+1][r] {
+            if c+1 < width &amp;&amp; board.squares[c+1][r] {
                 neighbors += 1;
             }
             //Bottom
-            if r+1 &lt; height {
+            if r+1 < height {
                 //B/L
-                if c &gt; 0 &amp;&amp; board.squares[c-1][r+1] {
+                if c > 0 &amp;&amp; board.squares[c-1][r+1] {
                     neighbors += 1;
                 }
                 //B/C
@@ -2778,7 +2780,7 @@ fn get_alive_neighbor_counts(board: &amp;Board) -&gt; Vec&lt;Vec&lt;usize&gt;&gt
                     neighbors += 1;
                 }
                 //B/R
-                if c+1 &lt; width &amp;&amp; board.squares[c+1][r+1] {
+                if c+1 < width &amp;&amp; board.squares[c+1][r+1] {
                     neighbors += 1;
                 }
             }
