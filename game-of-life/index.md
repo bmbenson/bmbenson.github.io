@@ -57,7 +57,29 @@ fn main() {
 <p>Now, when we execute cargo run we will see a blank window.</p><p>Let’s add a title to the window — instead of using only the default plugins with their default settings, we want to modify the WindowPlugin to have a title and specific resolution displayed.</p>
 
 ```rust
-//main\.rs<br>#![warn(clippy::pedantic)]<br><br>use bevy::prelude::*;<br><br>// Window starting dimensions<br>const WINDOW_START_HEIGHT: f32 = 800.0;<br>const WINDOW_START_WIDTH: f32 = 700.0;<br>fn main() {<br>    println!(&quot;Game of life app starting!&quot;);<br>    App::new()<br>        .add_plugins(<br>            DefaultPlugins.set(WindowPlugin {<br>                primary_window: Some(Window {<br>                    title: &quot;Conway&#39;s Game of Life&quot;.into(),<br>                    resolution: (WINDOW_START_WIDTH, WINDOW_START_HEIGHT).into(),<br>                    ..default()<br>                }),<br>                ..default()<br>            })<br>        )<br>        .run();<br>}
+//main\.rs
+#![warn(clippy::pedantic)]
+
+use bevy::prelude::*;
+
+// Window starting dimensions
+const WINDOW_START_HEIGHT: f32 = 800.0;
+const WINDOW_START_WIDTH: f32 = 700.0;
+fn main() {
+    println!(&quot;Game of life app starting!&quot;);
+    App::new()
+        .add_plugins(
+            DefaultPlugins.set(WindowPlugin {
+                primary_window: Some(Window 
+                    title: &quot;Conway&#39;s Game of Life&quot;.into(),
+                    resolution: (WINDOW_START_WIDTH, WINDOW_START_HEIGHT).into(),
+                    ..default()
+                }),
+                ..default()
+            })
+        )
+    .run();
+}
 ```
 
 <p>For this we still use the majority of the DefaultPlugins, but we override the WindowPlugin with our custom settings &amp; leave all others default. Note: The ..default() is the part that fills in the remaining elements of the struct for us with the defaults, which for Bevy are quite sane.</p><p>Execute: cargo run</p><figure><img alt="" src="https://cdn-images-1.medium.com/max/700/1*aOaXgG7NtgGXfAss9ny34A.png" /></figure><p>NICE, we have something displayed &amp; our window is titled — let’s commit for good measure!</p><pre>git commit -a -m &quot;Window title and display functionality.&quot;</pre>
