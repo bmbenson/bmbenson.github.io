@@ -1394,7 +1394,7 @@ fn button_system(mut interaction_query: Query<
 }
 ```
 
-A major strength of ECS is that is allows this type of separation of components from each other. The above is a concrete example where we can prune any care about UX from the keyboard_system, mouse_system, and update_board functions but still maintain the same functionality. This is useful if we wanted to add some feature where perhaps we want to only draw a subset of the screen, or change the UX experience to something like a [ratatui](https://github.com/ratatui-org/ratatui) console and the code changes may only be required in the draw_board function.
+A major strength of ECS is that is allows this type of separation of components from each other. The above is a concrete example where we can prune any care about UX from the `keyboard_system`, `mouse_system`, and `update_board` functions but still maintain the same functionality. This is useful if we wanted to add some feature where perhaps we want to only draw a subset of the screen, or change the UX experience to something like a [ratatui](https://github.com/ratatui-org/ratatui) console and the code changes may only be required in the draw_board function.
 
 Alright — lots of updates, here’s the full main.rs
 
@@ -1708,7 +1708,7 @@ let game_metadata = GameMetadata::default();
 
 Next we’ll add a new UX element for a status bar at the bottom of the game.
 
-In the area we already declare some of the consts, add a pixel height of the status bar as well as resize the window to accomodate out new space.
+In the area we already declared some of the consts, add a pixel height for the status bar and we'll also add that padding to the window height.
 
 ```rust
 //main.rs
@@ -1722,13 +1722,13 @@ let window_height =  f32::from(TILE_SIZE * board.squares_high) + STATUS_BAR_PX;
 resolution: (window_width, window_height).into(),
 ```
 
-Previously our game grid layout was added to the base world at 100% height and width, now we need to add an additional status bar below the game grid, so we’ll add another layer of grid layout, this time with 1 column and two rows. In addition, we will use a fixed size for the status bar row, and configure the game grid row to take up all the remaining space (base height *minus* the fixed number of pixels).
+Previously our game grid layout was added to the base world at 100% height and width, now we need to add an additional status bar below the game grid, so we’ll add another layer of grid layout, this time with one column and two rows. In addition, we will use a fixed size for the status bar row, and configure the game grid row to take up all the remaining space (base height *minus* the fixed number of pixels).
 
 Here’s a high level view of what we’re going to change to.
 
 ![Grid layout and status bar addition](./assets/grid_and_status.png)
 
-First thing we spawn will be the 1 column, 2 row grid layout.
+First thing we spawn will be the one column, two row grid layout.
 
 ```rust
 //main.rs
@@ -1758,7 +1758,7 @@ fn initial_setup(mut commands: Commands, board: Res<Board>, metadata: ResMut<Gam
         })
 ```
 
-This grid layout we just added fills 100% of the base and with GridTrack::px we add a fixed element size for the bottom row.
+This grid layout we just added fills 100% of the base and with `GridTrack::px` we add a fixed element size for the bottom row.
 
 We then use this to add children to it, which will be the grid layout like before, and a new status bar item with some tuples of TextBundles as well as the components we created above.
 
@@ -1844,9 +1844,9 @@ The two new TextBundles will represent the game state (paused, etc) and the iter
         });
 ```
 
-The reason we added the new IterationText and StatusText components is so we can query for these specific text fields when we want to update their values after the game is paused or an iteration tick occurred. For this text update we’ll add a new system. This new system queries for any Text element with IterationText associated to modify the text on iteration update.
+The reason we added the new IterationText and StatusText components is so we can query for these specific text fields when we want to update their values after the game is paused or an iteration tick occurred.  To do the text update we’ll add a new system. This new system queries for any Text element with IterationText associated to modify the text on iteration update.
 
-For the status_bar_text_update we require the two Text entities as the query params, one for the GameStateText and the other for IterationText. If we just add two different query params Bevy prevents it. This is because Bevy has no guarantee we didn’t create entities that may share a Component. If we has added both GameStateText and IterationText we would have two mutable references to the same variable which would violate the guarantees of safe rust.
+For the `status_bar_text_update` we require the two Text entities as the query params, one for the GameStateText and the other for IterationText. If we just add two different query params Bevy will prevent it w/ a runtime panic. This is because Bevy has no guarantee we didn’t create entities that may share a Component. IE: If we has added both GameStateText and IterationText we would have two mutable references to the same variable which would violate the guarantees of safe rust.
 
 The solution to this is the [ParamSet](https://docs.rs/bevy/latest/bevy/prelude/struct.ParamSet.html) which uses parameter numbering and the borrow checker to ensure we only have a mutable reference to one of the parameters at a time. There are some pretty good examples and explanations in the [ParamSet](https://docs.rs/bevy/latest/bevy/prelude/struct.ParamSet.html) docs.
 
@@ -1874,7 +1874,7 @@ fn status_bar_text_update(mut text_params: ParamSet<(Query<&mut Text, With<GameS
 ```
 
 
-We also have to change the square count and increment the iteration counter in both update_board, the keyboard_system, and button_system functions.
+We also have to change the square count and increment the iteration counter in both `update_board`, the `keyboard_system`, and `button_system` functions.
 
 ```rust
 //main.rs
@@ -2369,9 +2369,9 @@ Draw count:303 iterations:12
 
 Whoa, this means for every iteration we execute, we have drawn the board about ***25*** times! **Most** of these will be draws that were already present, so wouldn’t it be nice if we only drew the board when we need to??
 
-The naive approach might be to only do draw_board with the FixedUpdate schedule after we call update_board on, but there are a few issues with that approach:
-1. update_board only executes when the game is running, so if we were paused, we would only see the results of mouse clicks after the game is resumed.
-1. Due to the fixed update nature of update_board, our clicks to the screen will be delayed until up to 1/2 sec after we click. This would make the user-input feel sluggish.
+The naive approach might be to only do `draw_board` with the `FixedUpdate` schedule after we call `update_board` on, but there are a few issues with that approach:
+1. `update_board` only executes when the game is running, so if we were paused, we would only see the results of mouse clicks after the game is resumed.
+1. Due to the fixed update nature of `update_board`, our clicks to the screen will be delayed until up to 1/2 sec after we click. This would make the user-input feel sluggish.
 
 Luckily Bevy includes an Event feature specifically for this — We’ll add various event types to represent which areas need to be redrawn, then we can fire off a redraw event from the mouse, keyboard, or fixed rate update_board functions.
 
@@ -2394,7 +2394,7 @@ struct StatusBarNeedsDrawingEvent;
 
 These three events will be fired when the board needs to be updated (like on a fixed time click), when the board needs to be redrawn in response to a change, and when the status bar needs an update. We could probably merge the board draw event with the status bar draw event, but it doesn’t hurt much to keep ‘em separate.
 
-Now we will add a new game_tick_timer function to execute on a fixed time schedule (like update_board previously).
+Now we will add a new game_tick_timer function to execute on a fixed time schedule (like `update_board` previously).
 
 ```rust
 //main.rs
@@ -2404,7 +2404,7 @@ fn game_tick_timer(mut game_board_update_needed: EventWriter<BoardNeedsUpdateEve
 }
 ```
 
-Now that we have this new function, let’s change it to fire on the fixed schedule instead of update_board. We’ll also move update_board to execute on the update schedule so we can pick up events in the same cycle as they are fired off. We also need to add the events in a similar fashion as the resources.
+Now that we have this new function, let’s change it to fire on the fixed schedule instead of `update_board`. We’ll also move `update_board` to execute on the update schedule so we can pick up events in the same cycle as they are fired off. We also need to add the events in a similar fashion as the resources.
 
 ```rust
 //main.rs
@@ -2511,7 +2511,7 @@ fn keyboard_system(keyboard_input: Res<Input<KeyCode>>, game_state: Res<State<Ga
 }
 ```
 
-Keen readers will notice I snuck a new function into our program — When paused, we can now hit **n** to move to the next board state! This addition was super easy due to the event system, and is core to why we created the new game_tick_timer function instead of leaving update_board on a schedule.
+Keen readers will notice I snuck a new function into our program — When paused, we can now hit "**n**" to move to the next board state! This addition was super easy due to the event system, and is core to why we created the new `game_tick_timer` function instead of leaving `update_board` on a schedule.
 
 Now, we’ll gate our first function on the presence of an event in the queue. We return early if we don’t have any event available to process.
 
@@ -2545,7 +2545,7 @@ fn status_bar_text_update(mut text_params: ParamSet<(Query<&mut Text, With<GameS
 }
 ```
 
-Now we’ll gate update_board on the event reader, but also pass in the event writers for both draw event types. *As a side note:* We should have all event writers generally execute before the event reads may check for the events.
+Now we’ll gate `update_board` on the event reader, but also pass in the event writers for both draw event types. *As a side note:* We should have all event writers generally execute before the event reads may check for the events.
 
 ```rust
 //main.rs
@@ -2563,7 +2563,7 @@ fn update_board(mut query: Query<&GridLocation>, mut board: ResMut<Board>, mut m
 }
 ```
 
-We also need to gate draw_board.
+We also need to gate `draw_board`.
 
 ```rust
 //main.rs
@@ -2601,7 +2601,7 @@ let rows = 100;
 
 When you execute `cargo run` you may notice the game running a bit slower… And on modern PCs that seems odd… it’s only 10,000 squares to run a sim on… it certainly should be able to handle it.
 
-The primary reason is Bevy runs ***very*** slowly when it’s debug variant is built, so we want to add some optimization for it (and other dependencies).
+The primary reason is Bevy runs ***very*** slowly when the debug variant is built, so we want to add some optimization for it (and other dependencies).
 
 Add this to the bottom of your Cargo.toml file and we should be back to a 1/2 second tick time.
 
