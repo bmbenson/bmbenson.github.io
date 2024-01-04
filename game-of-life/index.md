@@ -3056,3 +3056,7 @@ For additional fun there are a few things I didn’t add to the game that would 
 * The ability to resize the game’s window up and down including automatic tile scaling.
 * Add ability to ‘load’ a csv of various board states to try out different scenarios.
 * Add a ‘clear and randomize’ option as a keypress that restarts the sim with the squares in a random on/off configuration.
+
+
+# Contact Info
+Contact me via [LinkedIn](https://www.linkedin.com/in/bryanmbenson/) or my [GitHub](https://github.com/bmbenson)
