@@ -1,11 +1,15 @@
 ---
 layout: post
 title: Rust — Conway’s Game of Life in Bevy ECS
+redirect_from:
+  - /game-of-life/
+  - /game-of-life/index.html
 tag:
-- rustlang
-- coding
-- games
-- bevy
+  - rustlang
+  - coding
+  - games
+  - bevy
+  - softwareengineering
 ---
 
 # Rust — Conway’s Game of Life in Bevy ECS

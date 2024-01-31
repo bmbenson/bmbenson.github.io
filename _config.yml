@@ -18,6 +18,7 @@ plugins:
   - jekyll-feed
   - jekyll-paginate
   - minima
+  - jekyll-redirect-from
 
 defaults:
   - scope:

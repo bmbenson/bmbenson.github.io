@@ -5,3 +5,4 @@ gem 'guard-livereload'
 gem 'html-proofer'
 gem "webrick", "~> 1.8"
 gem "minima"
+gem "jekyll-redirect-from", "~> 0.16.0"
