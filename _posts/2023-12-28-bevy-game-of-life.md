@@ -131,7 +131,7 @@ For this we still use the majority of the DefaultPlugins, but we override the Wi
 
 Execute: `cargo run`
 
-![Black Window](./assets/black_screen.png)
+![Black Window](/assets/img/black_screen.png)
 
 NICE, we have something displayed & our window is titled — let’s commit for good measure!
 
@@ -248,11 +248,11 @@ We also need something for the camera to display, so let’s start with somethin
 
 For this we’re enqueuing a spawn of a [NodeBundle](https://docs.rs/bevy/latest/bevy/prelude/struct.NodeBundle.html) to also be added to the scene. We tell it where to place the element as well as how large it should be in relation to the parent element. If we were to change the Val::Percent to other values, we will see the BG area shrink. 
 
-![NodeBundle added to Base](./assets/blue_in_base.png)
+![NodeBundle added to Base](/assets/img/blue_in_base.png)
 
 Execute: `cargo run`
 
-![Very blue screen](./assets/blue_screen.png)
+![Very blue screen](/assets/img/blue_screen.png)
 
 That’s… a lot of blue.
 
@@ -290,7 +290,7 @@ Okay, now we move on to changing our background NodeBundle to be a grid layout. 
 
 For this we iterate over the columns and and rows to add each of the squares, alternating the color of the grid node between red and black.
 
-![Grid Layout added to Base](./assets/grid_layout.png)
+![Grid Layout added to Base](/assets/img/grid_layout.png)
 
 
 ```rust
@@ -423,7 +423,7 @@ fn initial_setup(mut commands: Commands, board: Res<Board>) {
 ```
 Now let’s see what we have by executing: `cargo run`
 
-![Black and red checkerboard view](./assets/checkerboard.png)
+![Black and red checkerboard view](/assets/img/checkerboard.png)
 
 Sweet! Looks like we can play a huge game of checkers on that board!
 Let’s commit it to be able to return here as we’re about to change a good amount of stuff!
@@ -574,7 +574,7 @@ Now, run the app — you can now toggle different squares on and off! Make y
 
 Congratulations, we just made an incredibly boring version of MSPaint! 🥳🎉🎉🥳
 
-![Lame MS Paint](./assets/lame_paint.png)
+![Lame MS Paint](/assets/img/lame_paint.png)
 
 `git commit -a -m "Minimal working square toggle with the mouse."`
 
@@ -956,7 +956,7 @@ Alright — Execute things with `cargo run`
 
 NICE! Looks like we're movin’! After a while you’ll start to see the checkerboard pattern disappear & likely some patterns begin to stabilize. We can then change it up a bit with the mouse!
 
-![Movement Gif moving too fast for clicking squares on](./assets/update_too_fast.gif)
+![Movement Gif moving too fast for clicking squares on](/assets/img/update_too_fast.gif)
 
 Here’s the full main.rs
 
@@ -1204,7 +1204,7 @@ This will allow the user to create Game of Life shapes like oscillators and gli
 
 Below the oscillators are the top 4 items, and there’s a glider below that moves down and to the right.
 
-![Game of Life Oscillators and Gliders](./assets/OscillatorsNGliders.gif)
+![Game of Life Oscillators and Gliders](/assets/img/OscillatorsNGliders.gif)
 
 ## Taking Keyboard Input + updating GameState.
 
@@ -1726,7 +1726,7 @@ Previously our game grid layout was added to the base world at 100% height and w
 
 Here’s a high level view of what we’re going to change to.
 
-![Grid layout and status bar addition](./assets/grid_and_status.png)
+![Grid layout and status bar addition](/assets/img/grid_and_status.png)
 
 First thing we spawn will be the one column, two row grid layout.
 
@@ -2352,7 +2352,7 @@ fn get_alive_neighbor_counts(board: &Board) -> Vec<Vec<usize>> {
 
 Now let’s see this bad-boy in action!
 
-![Iteration counters](./assets/Iterations.gif)
+![Iteration counters](/assets/img/Iterations.gif)
 
 `git commit -a -m “Add status bar with iterations, gamestate, and alive square count.”`
 
@@ -2618,7 +2618,7 @@ Now, run a `cargo clean` and a `cargo build` you may notice some steam coming fr
 
 Now if we run `cargo run` it has some very interesting patterns with the larger board!
 
-![Large 100 by 100 board](./assets/100x100.gif)
+![Large 100 by 100 board](/assets/img/100x100.gif)
 
 And now, the final full main.rs
 
@@ -3046,7 +3046,7 @@ Last reminder — commit it for good measure!
 
 ## Wrap it up!
 
-![Wrap it up meme](./assets/wrap_it_up.gif)
+![Wrap it up meme](/assets/img/wrap_it_up.gif)
 
 That wraps up our Bevy game of life tutorial! Thank you for reading, and I hope you had fun running through it with me! Please feel free to reach out if there are any areas that need to be clarified or corrected.
 

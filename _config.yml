@@ -1,1 +1,36 @@
-title: blog.benson.zone homepage
+title: blog.benson.zone
+author: Bryan Benson
+email: bryan.benson@gmail.com
+description: >
+  Tech (Software Engineering, Networking), Sailing, Games, Random other nerd things
+url: "https://blog.benson.zone"
+github_username:  bmbenson
+linkedin_username: bryanmbenson
+timezone: America/Los Angeles
+encoding: utf-8
+theme: minima
+
+permalink: /:year/:month/:title/
+
+plugins:
+  - jekyll-sitemap
+  - jekyll-seo-tag
+  - jekyll-feed
+  - jekyll-paginate
+  - minima
+
+defaults:
+  - scope:
+      path: ""
+      type: "posts"
+    values:
+      comments: true
+
+paginate: 12
+paginate_path: "page:num"
+
+exclude:
+  - gemset.nix
+  - Gemfile
+  - Gemfile.lock
+  - Guardfile
